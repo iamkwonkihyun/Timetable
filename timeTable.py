@@ -1,24 +1,29 @@
 import time
 import datetime
-from win10toast_persist  import ToastNotifier
-import psutil
+from plyer import notification
+import win32com.client
 
-# 객체 생성
-toaster = ToastNotifier()
+# 프로그램 오픈 확인 후 알림창
+def check_if_running(process_name):
+    wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
+    service = wmi.ConnectServer(".", "root\\cimv2")
+    process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{process_name}'")
+    return len(process_list) > 0
 
-# 프로그램 열림 확인
-process_name = "timeTable.exe"
-
-isRunning = any(proc.name().lower() == process_name.lower() for proc in psutil.process_iter())
-
-if isRunning:
-    toaster.show_toast(
-        "Hello!",
-        "timeTable.exe is Running!\ndon't worry, it is not hacking",
-        duration=1,
-        icon_path=None,
-        threaded=True,
-    ),
+if check_if_running("Timetable.exe") == True:
+    notification.notify(
+        title="Hello!",
+        message="Timetable.exe is Running!\nDon't worry, it is not hacking :)",
+        timeout=10,
+        toast=True,
+    )
+else:
+    notification.notify(
+        title="Error",
+        message="fucking Error",
+        timeout=10,
+        toast=True,
+    )
 
 
 timetable = {
@@ -46,27 +51,25 @@ today_kor = kor_days[today]
 if today_kor in timetable:
     while True:
         now = datetime.datetime.now().strftime("%H:%M") # 현재 시간 구해서 변수로
-        strp_now = datetime.datetime.strptime(now, "%H:%M") + datetime.timedelta(minutes=10)
-        endTime = strp_now.strftime("%H:%M")
         if now in timetable[today_kor]: # 현재 시간에 timetable[today_kor]에 있으면 아래 코드 실행
             subject = timetable[today_kor][now] # 현재 시간의 과목 가져오기
-            toaster.show_toast(
-                f"{today_kor} 수업 알림",
-                f"다음 교시: {subject}",
-                duration=None,
-                icon_path=None,
-                threaded=True
+            notification.notify(
+                title=f"{today_kor} 수업 알림",
+                message=f"다음 교시: {subject}",
+                timeout=10,
+                toast=True,
             )
             time.sleep(60)
-        
+        strp_now = datetime.datetime.strptime(now, "%H:%M") + datetime.timedelta(minutes=10)
+        endTime = strp_now.strftime("%H:%M")
         if endTime in timetable[today_kor]:
-            toaster.show_toast(
-                f"{today_kor} 수업 알림",
-                f"수업 끝나기 10분 전",
-                duration=None,
-                icon_path=None,
-                threaded=True
+            notification.notify(
+                title=f"{today_kor} 수업 알림",
+                message=f"수업 끝나기 10분 전",
+                timeout=10,
+                toast=True,
             )
             time.sleep(60)
         
         time.sleep(1)
+        
