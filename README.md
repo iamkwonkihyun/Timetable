@@ -1,3 +1,9 @@
-`timeTable with python`
+### Timetable with python
+
+---
+
+`Q: how to Run?`<br />
+`A: so easy~`<br/>
+`drag to Timetable.pyw and click two times`
 <br/>
-`dist/timeTable.exe`
+`ok? ok.`
