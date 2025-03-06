@@ -1,8 +1,25 @@
 import time
 import datetime
 from win10toast_persist  import ToastNotifier
+import psutil
 
+# 객체 생성
 toaster = ToastNotifier()
+
+# 프로그램 열림 확인
+process_name = "timeTable.exe"
+
+isRunning = any(proc.name().lower() == process_name.lower() for proc in psutil.process_iter())
+
+if isRunning:
+    toaster.show_toast(
+        "Hello!",
+        "timeTable.exe is Running!\ndon't worry, it is not hacking",
+        duration=1,
+        icon_path=None,
+        threaded=True,
+    ),
+
 
 timetable = {
     "월요일": {"08:30": "네트워크 구축", "09:30": "네트워크 구축", "10:30": "네트워크 구축", "11:30": "네크워크 구축","12:20":"점심시간", "13:10": "일본어", "14:10": "미적분"},
@@ -25,8 +42,6 @@ kor_days = {
 }
 
 today_kor = kor_days[today]
-
-
 
 if today_kor in timetable:
     while True:
