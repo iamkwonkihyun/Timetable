@@ -1,7 +1,9 @@
 # import library
 import time, datetime, logging, os, sys, win32com.client, shutil
+from logging.handlers import TimedRotatingFileHandler
 from win10toast import ToastNotifier
-from data.data import TIMETABLE, KOR_DAYS
+from data.data import TIMETABLE
+from data.test_data import TEST_TIMETABLE
 
 programName = "pyw.exe"
 
@@ -11,6 +13,9 @@ if os.path.exists("logs"):
 if not os.path.exists("logs"):
     os.makedirs("logs")
 
+# 하루마다 새로운 로그 파일 생성, 최대 7개 유지
+handler = TimedRotatingFileHandler("logs/app.log", when="D", interval=1, backupCount=7)
+handler.suffix = "%Y-%m-%d.log"
 logging.basicConfig(
     filename="logs/app.log",
     level=logging.DEBUG,
@@ -28,45 +33,44 @@ wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
 service = wmi.ConnectServer(".", "root\\cimv2")
 process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{programName}'")
 
-while True:
-    print(len(process_list))
-    if len(process_list) > 0:
-        toaster.show_toast(
-            "Hello!",
-            "Timetable.pyw is Running!\nDon't worry, it is not hacking :)",
-            duration=None,
-            threaded=True,
-        )
-        logging.info("program running check: GOOD")
-        break
-    else:
-        toaster.show_toast(
-            "Error",
-            "fucking Error\nI don't like Error",
-            duration=None,
-            threaded=True,
-        )
-        logging.ERROR("program running check: BAD")
-        sys.exit()
-
-# today = "Monday"
-today = datetime.datetime.today().strftime("%A")
-
-# today_kor = "월요일"
-today_kor = KOR_DAYS[today]
+# while True:
+#     print(len(process_list))
+#     if len(process_list) > 0:
+#         toaster.show_toast(
+#             "Hello!",
+#             "Timetable.pyw is Running!\nDon't worry, it is not hacking :)",
+#             duration=None,
+#             threaded=True,
+#         )
+#         logging.info("program running check: GOOD")
+#         break
+#     else:
+#         toaster.show_toast(
+#             "Error",
+#             "fucking Error\nI don't like Error",
+#             duration=None,
+#             threaded=True,
+#         )
+#         logging.ERROR("program running check: BAD")
+#         sys.exit()
 
 # notification 한 번만 보내게 해줄 변수
 notified_times = set()
 
-# timetable에 today_kor이 포함되어 있으면 코드 실행
-if today_kor in TIMETABLE:
-    while True:
-        logging.info("KEEP RUNNING")
-        now = datetime.datetime.now().strftime("%H:%M")
-        strp_now = datetime.datetime.strptime(now, "%H:%M") + datetime.timedelta(minutes=10)
-        endTime = strp_now.strftime("%H:%M")
-        if now in TIMETABLE[today_kor] and now not in notified_times:
-            subject = TIMETABLE[today_kor][now]
+while True:
+    
+    # today = "Monday"
+    today = datetime.datetime.today().strftime("%A")
+    
+    # now = HH:MM
+    now = datetime.datetime.now().strftime("%H:%M")
+    strp_now = datetime.datetime.strptime(now, "%H:%M") + datetime.timedelta(minutes=10)
+    endTime = strp_now.strftime("%H:%M")
+
+    if today not in ["Saturday", "Sunday"]:
+        logging.info(f"WEEKDAYS:{today} KEEP RUNNING")
+        if now in TIMETABLE[today] and now not in notified_times:
+            subject = TIMETABLE[today][now]
             toaster.show_toast(
                 f"{today} Class Notification",
                 f"Next Class: {subject}",
@@ -75,10 +79,11 @@ if today_kor in TIMETABLE:
             )
             logging.info(f"{today} | {now} | {subject}")
             notified_times.add(now)
+            
         if endTime == "8:30":
             logging.info("endTime 8:30 pass")
             continue
-        elif endTime in TIMETABLE[today_kor] and endTime not in notified_times:
+        elif endTime in TIMETABLE[today] and endTime not in notified_times:
             toaster.show_toast(
                 f"{today} Class Notification",
                 f"10 minutes before the end of class",
@@ -88,9 +93,10 @@ if today_kor in TIMETABLE:
             logging.info(f"{today} | {now} | {subject}")
             notified_times.add(endTime)
             
-        # 1초마다 확인    
-        time.sleep(1) 
-elif today_kor not in TIMETABLE:
-    while True:
-        logging.info(f"weekend: {today}")
-        time.sleep(86400)
+        time.sleep(1)
+        continue
+    else:
+        logging.info(f"WEEKEND:{today} KEEP RUNNING")
+        time.sleep(1)
+        continue
+            
