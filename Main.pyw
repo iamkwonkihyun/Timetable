@@ -33,26 +33,26 @@ wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
 service = wmi.ConnectServer(".", "root\\cimv2")
 process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{programName}'")
 
-# while True:
-#     print(len(process_list))
-#     if len(process_list) > 0:
-#         toaster.show_toast(
-#             "Hello!",
-#             "Timetable.pyw is Running!\nDon't worry, it is not hacking :)",
-#             duration=None,
-#             threaded=True,
-#         )
-#         logging.info("program running check: GOOD")
-#         break
-#     else:
-#         toaster.show_toast(
-#             "Error",
-#             "fucking Error\nI don't like Error",
-#             duration=None,
-#             threaded=True,
-#         )
-#         logging.ERROR("program running check: BAD")
-#         sys.exit()
+while True:
+    print(len(process_list))
+    if len(process_list) > 0:
+        toaster.show_toast(
+            "Hello!",
+            "Timetable.pyw is Running!\nDon't worry, it is not hacking :)",
+            duration=None,
+            threaded=True,
+        )
+        logging.info("program running check: GOOD")
+        break
+    else:
+        toaster.show_toast(
+            "Error",
+            "fucking Error\nI don't like Error",
+            duration=None,
+            threaded=True,
+        )
+        logging.ERROR("program running check: BAD")
+        sys.exit()
 
 # notification 한 번만 보내게 해줄 변수
 notified_times = set()
