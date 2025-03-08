@@ -20,7 +20,7 @@
 #
 # print(f"{filename} 파일 저장 완료")
 
-TEST_TIMETABLE = {
+TIMETABLE = {
     "Monday": {
         "00:00": "Dummy Class",
         "00:01": "Dummy Class",
