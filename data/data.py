@@ -52,3 +52,5 @@ TIMETABLE = {
         
     },
 }
+
+BIRTHDAY = "03-09"

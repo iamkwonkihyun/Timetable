@@ -4,6 +4,7 @@ from logging.handlers import TimedRotatingFileHandler
 from win10toast import ToastNotifier
 from data.data import TIMETABLE
 from data.test_data import TEST_TIMETABLE
+from function.isBirthday import isBirthday
 
 programName = "pyw.exe"
 
@@ -29,6 +30,7 @@ logging.info("START PROGRAM")
 toaster = ToastNotifier()
 
 # 프로그램 실행 검사
+logging.info("PROGRAM CHECKING: ···")
 wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
 service = wmi.ConnectServer(".", "root\\cimv2")
 process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{programName}'")
@@ -39,64 +41,71 @@ while True:
         toaster.show_toast(
             "Hello!",
             "Timetable.pyw is Running!\nDon't worry, it is not hacking :)",
-            duration=None,
-            threaded=True,
+            duration=3,
+            threaded=False,
         )
-        logging.info("program running check: GOOD")
+        logging.info("PROGRAM CHECKING: GOOD :)")
         break
     else:
         toaster.show_toast(
             "Error",
             "fucking Error\nI don't like Error",
-            duration=None,
-            threaded=True,
+            duration=3,
+            threaded=False,
         )
-        logging.ERROR("program running check: BAD")
+        logging.ERROR("PROGRAM CHECKING: BAD :(")
         sys.exit()
 
 # notification 한 번만 보내게 해줄 변수
 notified_times = set()
 
 while True:
+    # num_today = "01-01"
+    num_today = datetime.datetime.today().strftime("%m-%d")
     
-    # today = "Monday"
-    today = datetime.datetime.today().strftime("%A")
+    # str_today = "Monday"
+    str_today = datetime.datetime.today().strftime("%A")
     
-    # now = HH:MM
-    now = datetime.datetime.now().strftime("%H:%M")
-    strp_now = datetime.datetime.strptime(now, "%H:%M") + datetime.timedelta(minutes=10)
-    endTime = strp_now.strftime("%H:%M")
+    # now_time = "HH:MM"
+    now_time = datetime.datetime.now().strftime("%H:%M")
+    
+    # end_time = "HH:MM" + 10 minutes
+    end_time = (datetime.datetime.strptime(now_time, "%H:%M") + datetime.timedelta(minutes=10)).strftime("%H:%M")
+    
+    if isBirthday(num_today):
+        logging.info("HAPPY BIRTHDAY TO YOU!!!")
+    pass
 
-    if today not in ["Saturday", "Sunday"]:
-        logging.info(f"WEEKDAYS:{today} KEEP RUNNING")
-        if now in TIMETABLE[today] and now not in notified_times:
-            subject = TIMETABLE[today][now]
+    if str_today not in ["Saturday", "Sunday"]:
+        logging.info(f"WEEKDAYS:{str_today} KEEP RUNNING")
+        if now_time in TIMETABLE[str_today] and now_time not in notified_times:
+            subject = TIMETABLE[str_today][now_time]
             toaster.show_toast(
-                f"{today} Class Notification",
+                f"{str_today} Class Notification",
                 f"Next Class: {subject}",
                 duration=None,
                 threaded=True,
             )
-            logging.info(f"{today} | {now} | {subject}")
-            notified_times.add(now)
+            logging.info(f"{str_today} | {now_time} | {subject}")
+            notified_times.add(now_time)
             
-        if endTime == "8:30":
+        if end_time == "8:30":
             logging.info("endTime 8:30 pass")
             continue
-        elif endTime in TIMETABLE[today] and endTime not in notified_times:
+        elif end_time in TIMETABLE[str_today] and end_time not in notified_times:
             toaster.show_toast(
-                f"{today} Class Notification",
+                f"{str_today} Class Notification",
                 f"10 minutes before the end of class",
                 duration=None,
                 threaded=True,
             )
-            logging.info(f"{today} | {now} | {subject}")
-            notified_times.add(endTime)
+            logging.info(f"{str_today} | {now_time} | {subject}")
+            notified_times.add(end_time)
             
         time.sleep(1)
         continue
     else:
-        logging.info(f"WEEKEND:{today} KEEP RUNNING")
+        logging.info(f"WEEKEND:{str_today} KEEP RUNNING")
         time.sleep(1)
         continue
             
