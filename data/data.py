@@ -54,3 +54,5 @@ TIMETABLE = {
 }
 
 BIRTHDAY = "03-09"
+
+PROGRAMNAME = "pyw.exe"

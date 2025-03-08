@@ -2,11 +2,12 @@
 import time, datetime, logging, os, sys, win32com.client, shutil
 from logging.handlers import TimedRotatingFileHandler
 from win10toast import ToastNotifier
-from data.data import TIMETABLE
-from data.test_data import TEST_TIMETABLE
+from data.data import TIMETABLE, PROGRAMNAME
+from function.isRunning import isRunning
 from function.isBirthday import isBirthday
 
-programName = "pyw.exe"
+# if you want to test any time ? use this module !
+# from data.test_data import TEST_TIMETABLE
 
 # log 생성
 if os.path.exists("logs"):
@@ -24,37 +25,11 @@ logging.basicConfig(
     encoding="utf-8"
 )
 
+isRunning(PROGRAMNAME)
 logging.info("START PROGRAM")
 
 # toaster 객체 생성
 toaster = ToastNotifier()
-
-# 프로그램 실행 검사
-logging.info("PROGRAM CHECKING: ···")
-wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
-service = wmi.ConnectServer(".", "root\\cimv2")
-process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{programName}'")
-
-while True:
-    print(len(process_list))
-    if len(process_list) > 0:
-        toaster.show_toast(
-            "Hello!",
-            "Timetable.pyw is Running!\nDon't worry, it is not hacking :)",
-            duration=3,
-            threaded=False,
-        )
-        logging.info("PROGRAM CHECKING: GOOD :)")
-        break
-    else:
-        toaster.show_toast(
-            "Error",
-            "fucking Error\nI don't like Error",
-            duration=3,
-            threaded=False,
-        )
-        logging.ERROR("PROGRAM CHECKING: BAD :(")
-        sys.exit()
 
 # notification 한 번만 보내게 해줄 변수
 notified_times = set()
@@ -78,7 +53,7 @@ while True:
 
     if str_today not in ["Saturday", "Sunday"]:
         logging.info(f"WEEKDAYS:{str_today} KEEP RUNNING")
-        if now_time in TIMETABLE[str_today] and now_time not in notified_times:
+        if now_time in TIMETABLE[str_today] and (str_today, now_time) not in notified_times:
             subject = TIMETABLE[str_today][now_time]
             toaster.show_toast(
                 f"{str_today} Class Notification",
