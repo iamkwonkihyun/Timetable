@@ -78,7 +78,7 @@ while True:
 
     if str_today not in ["Saturday", "Sunday"]:
         logging.info(f"WEEKDAYS:{str_today} KEEP RUNNING")
-        if now_time in TIMETABLE[str_today] and now_time not in notified_times:
+        if now_time in TIMETABLE[str_today] and (str_today, now_time) not in notified_times:
             subject = TIMETABLE[str_today][now_time]
             toaster.show_toast(
                 f"{str_today} Class Notification",
