@@ -1,13 +1,25 @@
 # import library
-import time, datetime, logging, os, sys, win32com.client, shutil
+import time,  logging, os, shutil
 from logging.handlers import TimedRotatingFileHandler
 from win10toast import ToastNotifier
-from data.data import TIMETABLE, PROGRAMNAME
+from data.data import PROGRAMNAME, BREAKTIME
 from function.isRunning import isRunning
 from function.isBirthday import isBirthday
+from function.todayVariable import todayVariable
+from function.isWeekday import isWeekday
+from function.isMWF import isMWF
+from function.resetVariable import resetVariable
 
-# if you want to test any time ? use this module !
-# from data.test_data import TEST_TIMETABLE
+# import Timetable, But if you use test_data? this data change to no use
+from data.data import TIMETABLE
+
+# if you want to test any time ? use this data ! ↙↙↙
+# from data.test_data import TIMETABLE
+
+# True = all Test Mode, False = All real Time Mode
+isTest = False
+# True = 주중, False = 주말
+want = True
 
 # log 생성
 if os.path.exists("logs"):
@@ -25,7 +37,8 @@ logging.basicConfig(
     encoding="utf-8"
 )
 
-isRunning(PROGRAMNAME)
+# 프로그램 실행 체크 함수(isTest=True: vscode 실행 시, isTest=False: main.pyw 실행 시)
+isRunning(PROGRAMNAME, isTest=isTest)
 logging.info("START PROGRAM")
 
 # toaster 객체 생성
@@ -35,52 +48,50 @@ toaster = ToastNotifier()
 notified_times = set()
 
 while True:
-    # num_today = "01-01"
-    num_today = datetime.datetime.today().strftime("%m-%d")
     
-    # str_today = "Monday"
-    str_today = datetime.datetime.today().strftime("%A")
+    # 모든 today, time 값 받아오기(isTest=True: 시간 설정 가능, isTest=False: 현실 시간)
+    num_today, txt_today, now_time, end_time = todayVariable(isTest=isTest)
     
-    # now_time = "HH:MM"
-    now_time = datetime.datetime.now().strftime("%H:%M")
+    # 하루가 지날 때 마다 notified_times 변수 초기화
+    if resetVariable(txt_today):
+        notified_times.clear()
     
-    # end_time = "HH:MM" + 10 minutes
-    end_time = (datetime.datetime.strptime(now_time, "%H:%M") + datetime.timedelta(minutes=10)).strftime("%H:%M")
-    
-    if isBirthday(num_today):
-        logging.info("HAPPY BIRTHDAY TO YOU!!!")
-    pass
+    # 오늘이 생일인지 확인하는 함수
+    isBirthday(num_today)
 
-    if str_today not in ["Saturday", "Sunday"]:
-        logging.info(f"WEEKDAYS:{str_today} KEEP RUNNING")
-        if now_time in TIMETABLE[str_today] and (str_today, now_time) not in notified_times:
-            subject = TIMETABLE[str_today][now_time]
+    # 오늘이 주말인지 주중인지 확인 (isTest=True: 조종 가능, isTest=False: 조종 불가 )
+    # want=True: 주중, want=False: 주말
+    if isWeekday(today=txt_today, isTest=isTest, want=want):
+        
+        logging.info(f"WEEKDAYS:{txt_today} KEEP RUNNING")
+        
+        if now_time in TIMETABLE[txt_today] and now_time not in notified_times:
+            subject = TIMETABLE[txt_today][now_time]
             toaster.show_toast(
-                f"{str_today} Class Notification",
+                f"{txt_today} Class Notification",
                 f"Next Class: {subject}",
                 duration=None,
                 threaded=True,
             )
-            logging.info(f"{str_today} | {now_time} | {subject}")
+            logging.info(f"{txt_today} | {now_time} | {subject} ")
             notified_times.add(now_time)
-            
-        if end_time == "8:30":
-            logging.info("endTime 8:30 pass")
-            continue
-        elif end_time in TIMETABLE[str_today] and end_time not in notified_times:
+        
+        # 오늘이 월수금인지 확인 후, 해당하는 BREAKTIME 선택
+        break_time_key = "MWF" if isMWF(txt_today) else "TT"
+        
+        if end_time in BREAKTIME[break_time_key] and end_time not in notified_times:
+            nClass = BREAKTIME[break_time_key][end_time]
             toaster.show_toast(
-                f"{str_today} Class Notification",
-                f"10 minutes before the end of class",
+                f"{txt_today} Class Notification",
+                f"10 minutes left until the {nClass} rest time",
                 duration=None,
                 threaded=True,
             )
-            logging.info(f"{str_today} | {now_time} | {subject}")
+            logging.info(f"{txt_today} | {end_time} | {nClass}")
             notified_times.add(end_time)
             
         time.sleep(1)
-        continue
     else:
-        logging.info(f"WEEKEND:{str_today} KEEP RUNNING")
+        logging.info(f"WEEKEND:{txt_today} KEEP RUNNING")
         time.sleep(1)
-        continue
             
