@@ -41,4 +41,3 @@ if __name__ == "__main__":
     #system tray 설정ㄴ
     app = systemTray()
     app.run()
-    
