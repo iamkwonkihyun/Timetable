@@ -92,6 +92,6 @@ while True:
             
         time.sleep(1)
     else:
-        logging.info(f"WEEKEND:{txt_today} KEEP RUNNING")
+        logging.info(f"WEEKENDS:{txt_today} KEEP RUNNING")
         time.sleep(1)
             
