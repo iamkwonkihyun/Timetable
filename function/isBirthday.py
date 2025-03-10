@@ -1,5 +1,5 @@
 from win10toast import ToastNotifier
-from data.data import BIRTHDAY
+from data.all_data import BIRTHDAY
 import logging
 
 toaster = ToastNotifier()

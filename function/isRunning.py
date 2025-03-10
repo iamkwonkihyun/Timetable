@@ -21,7 +21,7 @@ def isRunning(programName, isTest):
                     "Hello!",
                     "Timetable.pyw is Running!\nDon't worry, it is not hacking :)",
                     duration=3,
-                    threaded=False,
+                    threaded=True,
                 )
                 logging.info("PROGRAM CHECKING: GOOD :)")
                 break
@@ -30,7 +30,7 @@ def isRunning(programName, isTest):
                     "Error",
                     "fucking Error\nI don't like Error",
                     duration=3,
-                    threaded=False,
+                    threaded=True,
                 )
                 logging.ERROR("PROGRAM CHECKING: BAD :(")
                 sys.exit()
