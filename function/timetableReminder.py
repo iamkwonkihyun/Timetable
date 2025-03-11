@@ -5,8 +5,7 @@ from function.resetVariable import resetVariable
 from function.isBirthday import isBirthday
 from function.isWeekday import isWeekday
 from function.isMWF import isMWF
-from data.all_data import BREAKTIME, SHORTENED_TIMETABLE
-from function.isShortened import isShortened
+from data.all_data import BREAKTIME
 
 
 # import Timetable, But if you use test_data? this data change to no use
@@ -22,6 +21,12 @@ toaster = ToastNotifier()
 notified_times = set()
 
 def timetableReminder(isTest, want):
+    """시간표 알림 함수
+
+    Args:
+        isTest (bool): 테스트 할 때
+        want (bool): 주중 주말 선택
+    """
     while True:
         
         # 모든 today, time 값 받아오기(isTest=True: 시간 설정 가능, isTest=False: 현실 시간)

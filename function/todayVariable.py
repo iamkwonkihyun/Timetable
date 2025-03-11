@@ -1,10 +1,16 @@
 import datetime, logging
 
 def todayVariable(isTest):
-    # num_today = "MM-DD"
-    # txt_today = "Monday"
-    # now_time  = "HH:MM"
-    # end_time  = "HH:MM" + 10 minutes
+    """오늘 요일, 시간 정보를 알려주는 함수
+
+    Args:
+        isTest (bool): 테스트 할 때
+
+    Returns:
+        all_returns(str): 오늘 요일, 날짜, 끝나는 시간 등 반환
+        
+        || num_today = "MM-DD" || txt_today = "Monday" || now_time  = "HH:MM" || end_time  = "HH:MM" + 10 minutes ||
+    """
     today = datetime.datetime.today()
     if isTest:
         logging.debug("todayVariable MODE: TEST")
