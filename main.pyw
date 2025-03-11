@@ -6,11 +6,11 @@ from function.systemTray import systemTray
 from function.timetableReminder import timetableReminder
 
 # True = all Test Mode, False = All real Time Mode
-isTest = True
+isTest = False
 # True = 주중, False = 주말( isTest가 False 일땐 wnat 아무 기능 안함)
 want = True
 # program name
-programName = "pyw.exe"
+programName = "main.exe"
 
 # log 생성
 if os.path.exists("logs"):

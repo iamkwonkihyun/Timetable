@@ -3,14 +3,16 @@ import logging
 isActivated = False
 
 def isShortened(): 
+    """단축 수업 인지 확인하는 함수
+
+    Returns:
+        bool: systemTray에서 클릭할 때 마다 isActivated가 바뀜
+    """
     global isActivated
-    logging.debug(1)
     
     if isActivated == True:
         isActivated = False
-        logging.debug(2)
         return True
     elif isActivated == False:
         isActivated = True
-        logging.debug(3)
         return False

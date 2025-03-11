@@ -1,37 +1,36 @@
 import sys, os, logging
+from data.filePath import assets_dir_func
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
 from PyQt5.QtGui import QIcon
-# 경로 추가 (가능하면 상대경로를 권장)
-sys.path.append(os.path.abspath("c:/HANSEI/TimeTable/data"))  
-sys.path.append(os.path.abspath("c:/HANSEI/TimeTable/function"))
-
-from all_data import TIMETABLE, SHORTENED_TIMETABLE
-from todayVariable import todayVariable
-from isMWF import isMWF
-from isShortened import isShortened
+from data.all_data import TIMETABLE, SHORTENED_TIMETABLE
+from function.todayVariable import todayVariable
+from function.isMWF import isMWF
+from function.isShortened import isShortened
 
 isActivated = True
 
 class systemTray:
+    """Windows System Tray Function
+    """
     def __init__(self):
         self.app = QApplication(sys.argv)
 
-        tray_icon_path = "C:/HANSEI/TimeTable/assets/hansei.ico"
+        tray_icon_path = assets_dir_func("hansei.ico")
         self.tray_icon = QSystemTrayIcon(QIcon(tray_icon_path), self.app)
 
         self.menu = QMenu()
         
-        settings_icon_path = "C:/HANSEI/TimeTable/assets/time.ico"
+        settings_icon_path = assets_dir_func(("time.ico"))
         self.show_action = QAction(QIcon(settings_icon_path), "Shortened_Mode", self.menu)
         self.show_action.triggered.connect(self.show_shortended_timetable)
         self.menu.addAction(self.show_action)
         
-        settings_icon_path = "C:/HANSEI/TimeTable/assets/settings.ico"
+        settings_icon_path = assets_dir_func(("settings.ico"))
         self.show_action = QAction(QIcon(settings_icon_path), "Settings", self.menu)
         self.show_action.triggered.connect(self.show_settings)
         self.menu.addAction(self.show_action)
 
-        exit_icon_patt = "C:/HANSEI/TimeTable/assets/exit.ico"
+        exit_icon_patt = assets_dir_func(("exit.ico"))
         self.quit_action = QAction(QIcon(exit_icon_patt), "Exit", self.menu)
         self.quit_action.triggered.connect(self.app.quit)
         self.menu.addAction(self.quit_action)

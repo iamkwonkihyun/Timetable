@@ -5,8 +5,14 @@ toaster = ToastNotifier()
 
 # 프로그램 실행 검사
 def isRunning(programName, isTest):
+    """프로그램 작동 검사 함수
+
+    Args:
+        programName (str): 실행되는 프로그램 이름
+        isTest (bool): 테스트 할 때
+    """
     if isTest == True:
-        logging.debug("isRunning MODE: TEST")
+        logging.debug("isRunning Function: TEST MODE")
         pass
     else:
         logging.info("PROGRAM CHECKING: ···")
@@ -19,7 +25,7 @@ def isRunning(programName, isTest):
             if len(process_list) > 0:
                 toaster.show_toast(
                     "Hello!",
-                    "Timetable.pyw is Running!\nDon't worry, it is not hacking :)",
+                    "Timetable.pyw is Running!\nNice To Meet you :)",
                     duration=3,
                     threaded=True,
                 )
@@ -27,8 +33,8 @@ def isRunning(programName, isTest):
                 break
             else:
                 toaster.show_toast(
-                    "Error",
-                    "fucking Error\nI don't like Error",
+                    "Hello!",
+                    "oh.. bad news..\nsomething went wrong.. :(",
                     duration=3,
                     threaded=True,
                 )
