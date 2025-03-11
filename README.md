@@ -1,16 +1,21 @@
 ## <b>Timetable Notification for Windows ( Made with Python )</b>
 
-> 요일, 시간, 교시에 맞게 과목을 Windows 알림으로 알려드립니다.<br/>
-> 시간표 또는 시간은 data/all_data.py에서 수정이 가능합니다.<br/>
+> ## What is Timetable?
+>  > 학교 시간표를 노트북이나 컴퓨터와 같은 Windows OS 기반의 시스템에서 알림으로 알려주는 프로그램입니다.
 >
-> > `실행 방법`<br/>
->> `1. clone repository`<br/>
->> `2. open folder`<br/>
->> `3. drag cursor to main.pyw, and click 2 times`<br/>
->> `4. finish`<br/>
+> ## How to Start?
 >
-> 오늘이 단축 수업이다?<br/>
-> 단축 수업 시간표 또는 시간은 위와 같이 data/all_data.py에서 수정이 가능합니다.<br/>
-> 단축 수업 시간표로 설정하고 싶으시다면<br/>
-> Windows 아래에 있는 system tray에서 한세 로고를 우클릭 후<br/>
-> Shortended_Mode를 누르시면 단축 수업 시간표로 전환이 됩니다.
+>  > + 레포지토리를 복제합니다<br/>
+>  > + 폴더를 열고 cmd창을 열어서<br/>
+`pip install -r requirements.txt`<br/>
+>  >필요한 라이브러리들을 설치한다<br/>
+>  > + 설치가 완료되었으면 폴더에 있는 main.pyw를 더블 클릭한다<br/>
+>  > + FINISH.<br/>
+>  >
+>  > ~~모든 것들이 잘되었다면 "Hello!" 라는 알림이 뜰것이다.~~
+>  ## What features does it have?What features does it have?
+>  > 1. 다음 교시 과목 알림
+>  > 2. 수업 종료시간 10분 전 알림
+>  > 3. system tray에 있는 아이콘 호버 시 전체 시간표 나옴
+>  > 4. 단축 수업 시 단축 수업 모드로 변환 가능
+>  > 5. ~~종료 기능~~
