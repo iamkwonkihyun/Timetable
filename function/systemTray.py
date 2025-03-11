@@ -3,10 +3,14 @@ from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
 from PyQt5.QtGui import QIcon
 # 경로 추가 (가능하면 상대경로를 권장)
 sys.path.append(os.path.abspath("c:/HANSEI/TimeTable/data"))  
-sys.path.append(os.path.abspath("c:/HANSEI/TimeTable/function"))  
+sys.path.append(os.path.abspath("c:/HANSEI/TimeTable/function"))
 
-from all_data import TIMETABLE
+from all_data import TIMETABLE, SHORTENED_TIMETABLE
 from todayVariable import todayVariable
+from isMWF import isMWF
+from isShortened import isShortened
+
+isActivated = True
 
 class systemTray:
     def __init__(self):
@@ -16,6 +20,11 @@ class systemTray:
         self.tray_icon = QSystemTrayIcon(QIcon(tray_icon_path), self.app)
 
         self.menu = QMenu()
+        
+        settings_icon_path = "C:/HANSEI/TimeTable/assets/time.ico"
+        self.show_action = QAction(QIcon(settings_icon_path), "Shortened_Mode", self.menu)
+        self.show_action.triggered.connect(self.show_shortended_timetable)
+        self.menu.addAction(self.show_action)
         
         settings_icon_path = "C:/HANSEI/TimeTable/assets/settings.ico"
         self.show_action = QAction(QIcon(settings_icon_path), "Settings", self.menu)
@@ -34,16 +43,35 @@ class systemTray:
         self.tray_icon.show()
 
     def update_tooltip(self):
+        global isActivated
+        
         _, txt_today, _, _ = todayVariable(isTest=False)
-        today_schedule = TIMETABLE.get(txt_today, {})
+        if isShortened():
+            key = "MWF" if isMWF(txt_today) else "TT"
+            today_schedule = SHORTENED_TIMETABLE.get(key, {})
+            isActivated = True
+        else:
+            today_schedule = TIMETABLE.get(txt_today, {})
+            isActivated = False
 
+            
         # 시간표를 문자열로 변환
         timetable_message = "\n".join([f"{time}: {task}" for time, task in today_schedule.items()])
-        
+
         if not timetable_message:
             timetable_message = "No schedule available"  # 시간표가 없을 경우 기본 메시지
 
         self.tray_icon.setToolTip(timetable_message)  # 📌 마우스를 올렸을 때 툴팁으로 표시됨
+
+    def show_shortended_timetable(self):
+        comment = "Deactivated" if isActivated else "Activated"
+        self.update_tooltip()
+        self.tray_icon.showMessage(
+            "Shortened Timetable Mode",
+            f"{comment}",  # 기존 툴팁 내용 사용
+            QSystemTrayIcon.Information,
+            2000
+        )
 
     def show_settings(self):
         self.tray_icon.showMessage(

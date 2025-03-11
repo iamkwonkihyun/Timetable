@@ -8,7 +8,7 @@ def todayVariable(isTest):
     today = datetime.datetime.today()
     if isTest:
         logging.debug("todayVariable MODE: TEST")
-        num_today = "03-10"
+        num_today = "03-11"
         txt_today = "Tuesday"
         now_time = "12:21"
         end_time = "16:10"

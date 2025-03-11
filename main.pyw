@@ -7,7 +7,7 @@ from function.timetableReminder import timetableReminder
 
 # True = all Test Mode, False = All real Time Mode
 isTest = True
-# True = 주중, False = 주말
+# True = 주중, False = 주말( isTest가 False 일땐 wnat 아무 기능 안함)
 want = True
 # program name
 programName = "pyw.exe"
@@ -38,6 +38,6 @@ if __name__ == "__main__":
     #timetableReminder만 백그라운드에서 단독 실행
     timetable_reminder = threading.Thread(target=timetableReminder, args=(isTest, want), daemon=True)
     timetable_reminder.start()
-    #system tray 설정ㄴ
+    #system tray 설정
     app = systemTray()
     app.run()
