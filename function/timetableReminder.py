@@ -5,7 +5,8 @@ from function.resetVariable import resetVariable
 from function.isBirthday import isBirthday
 from function.isWeekday import isWeekday
 from function.isMWF import isMWF
-from data.all_data import BREAKTIME
+from data.all_data import BREAKTIME, SHORTENED_TIMETABLE
+from function.isShortened import isShortened
 
 
 # import Timetable, But if you use test_data? this data change to no use
