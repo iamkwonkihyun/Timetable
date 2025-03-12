@@ -1,4 +1,4 @@
-import logging, time
+import logging, time, json, os
 from win10toast import ToastNotifier
 from function.todayVariable import todayVariable
 from function.resetVariable import resetVariable
@@ -6,10 +6,9 @@ from function.isBirthday import isBirthday
 from function.isWeekday import isWeekday
 from function.isMWF import isMWF
 from data.all_data import BREAKTIME
-
+from function.filePath import data_dir_func
 
 # import Timetable, But if you use test_data? this data change to no use
-from data.all_data import TIMETABLE
 
 # if you want to test any time ? use this data ! ↙↙↙
 # from data.test_data import TIMETABLE
@@ -21,6 +20,15 @@ toaster = ToastNotifier()
 notified_times = set()
 
 def timetableReminder(isTest, want):
+    
+    # 저장할 파일 경로
+    FILE_PATH = data_dir_func("timetable.json")
+
+    # 기존 시간표 데이터 불러오기
+    if os.path.exists(FILE_PATH):
+        with open(FILE_PATH, "r", encoding="utf-8") as f:
+            TIMETABLE = json.load(f)
+    
     """시간표 알림 함수
 
     Args:

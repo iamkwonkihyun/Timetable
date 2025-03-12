@@ -16,8 +16,8 @@ def todayVariable(isTest):
         logging.debug("todayVariable MODE: TEST")
         num_today = "03-11"
         txt_today = "Tuesday"
-        now_time = "12:21"
-        end_time = "16:10"
+        now_time = "12:2"
+        end_time = "16:1"
         return num_today, txt_today, now_time, end_time
     else:
         num_today = today.strftime("%m-%d")

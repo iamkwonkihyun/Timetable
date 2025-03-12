@@ -1,17 +1,18 @@
-import sys, os, logging
-from data.filePath import assets_dir_func
+import sys, logging, json, os
+from function.filePath import assets_dir_func, data_dir_func
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
 from PyQt5.QtGui import QIcon
-from data.all_data import TIMETABLE, SHORTENED_TIMETABLE
+from data.all_data import SHORTENED_TIMETABLE
 from function.todayVariable import todayVariable
 from function.isMWF import isMWF
 from function.isShortened import isShortened
+from function.settings import settings
 
 isActivated = True
-
 class systemTray:
     """Windows System Tray Function
     """
+    
     def __init__(self):
         self.app = QApplication(sys.argv)
 
@@ -42,6 +43,14 @@ class systemTray:
         self.tray_icon.show()
 
     def update_tooltip(self):
+        # 저장할 파일 경로
+        FILE_PATH = data_dir_func("timetable.json")
+
+        # 기존 시간표 데이터 불러오기
+        if os.path.exists(FILE_PATH):
+            with open(FILE_PATH, "r", encoding="utf-8") as f:
+                TIMETABLE = json.load(f)
+        
         global isActivated
         
         _, txt_today, _, _ = todayVariable(isTest=False)
@@ -73,12 +82,7 @@ class systemTray:
         )
 
     def show_settings(self):
-        self.tray_icon.showMessage(
-            "Timetable",
-            self.tray_icon.toolTip(),  # 기존 툴팁 내용 사용
-            QSystemTrayIcon.Information,
-            2000
-        )
+        settings()
 
     def run(self):
         if self.app.exec_() == 0:
