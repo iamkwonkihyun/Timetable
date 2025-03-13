@@ -1,17 +1,18 @@
 import logging, time, json, os
 from win10toast import ToastNotifier
-from function.todayVariable import todayVariable
-from function.resetVariable import resetVariable
-from function.isBirthday import isBirthday
-from function.isWeekday import isWeekday
-from function.isMWF import isMWF
-from data.all_data import BREAKTIME
-from function.filePath import data_dir_func
+from function.functions import todayVariable, resetVariable, isBirthday, isWeekday, isMWF, data_dir_func
 
-# import Timetable, But if you use test_data? this data change to no use
+TIMETABLE_PATH = data_dir_func("timetable.json")
+BREAKTIME_PATH = data_dir_func("breaktime.json")
 
-# if you want to test any time ? use this data ! ↙↙↙
-# from data.test_data import TIMETABLE
+# 기존 시간표 데이터 불러오기
+os.path.exists(TIMETABLE_PATH)
+os.path.exists(BREAKTIME_PATH)
+
+with open(TIMETABLE_PATH, "r", encoding="utf-8") as f:
+    TIMETABLE = json.load(f)
+with open(BREAKTIME_PATH, "r", encoding='utf-8') as f:
+    BREAKTIME = json.load(f)
 
 # toaster 객체 생성
 toaster = ToastNotifier()

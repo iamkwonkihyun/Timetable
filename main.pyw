@@ -1,9 +1,9 @@
 # import library
-import logging, os, shutil, threading
+import logging, os, threading
 from logging.handlers import TimedRotatingFileHandler
 from function.programCheck import programCheck
 from function.systemTray import systemTray
-from function.timetableReminder import timetableReminder
+from function.reminder import timetableReminder
 
 # True = all Test Mode, False = All real Time Mode
 isTest = True
