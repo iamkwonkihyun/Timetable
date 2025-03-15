@@ -4,7 +4,8 @@ from win10toast import ToastNotifier
 toaster = ToastNotifier()
 
 # 프로그램 실행 검사
-def isRunning(programName, isTest):
+def programCheck(programName, isTest):
+    checkTime = 0
     """프로그램 작동 검사 함수
 
     Args:
@@ -15,13 +16,11 @@ def isRunning(programName, isTest):
         logging.debug("isRunning Function: TEST MODE")
         pass
     else:
-        logging.info("PROGRAM CHECKING: ···")
-        wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
-        service = wmi.ConnectServer(".", "root\\cimv2")
-        process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{programName}'")
-
-        while True:
-            print(len(process_list))
+        for program in programName:
+            logging.info("PROGRAM CHECKING: ···")
+            wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
+            service = wmi.ConnectServer(".", "root\\cimv2")
+            process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
             if len(process_list) > 0:
                 toaster.show_toast(
                     "Hello!",
@@ -38,5 +37,8 @@ def isRunning(programName, isTest):
                     duration=3,
                     threaded=True,
                 )
-                logging.ERROR("PROGRAM CHECKING: BAD :(")
-                sys.exit()
+                logging.info("PROGRAM CHECKING: BAD :(")
+                checkTime += 1
+                if checkTime == 2:
+                    ("PROGRAM OFF")
+                    sys.exit()

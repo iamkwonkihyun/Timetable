@@ -1,18 +1,17 @@
-import logging, time
+import logging, time, json, os
 from win10toast import ToastNotifier
-from function.todayVariable import todayVariable
-from function.resetVariable import resetVariable
-from function.isBirthday import isBirthday
-from function.isWeekday import isWeekday
-from function.isMWF import isMWF
-from data.all_data import BREAKTIME
+from function.functions import todayVariable, resetVariable, isBirthday, isWeekday, isMWF, data_dir_func
 
+TIMETABLE_PATH = data_dir_func("timetable.json")
 
-# import Timetable, But if you use test_data? this data change to no use
-from data.all_data import TIMETABLE
+# 기존 시간표 데이터 불러오기
+os.path.exists(TIMETABLE_PATH)
 
-# if you want to test any time ? use this data ! ↙↙↙
-# from data.test_data import TIMETABLE
+with open(TIMETABLE_PATH, "r", encoding="utf-8") as f:
+    timetable = json.load(f)
+
+BASIC_TIMETABLE = timetable["BASIC_TIMETABLE"]
+BREAKTIME = timetable["BREAKTIME"]
 
 # toaster 객체 생성
 toaster = ToastNotifier()
@@ -21,6 +20,15 @@ toaster = ToastNotifier()
 notified_times = set()
 
 def timetableReminder(isTest, want):
+    
+    # 저장할 파일 경로
+    FILE_PATH = data_dir_func("timetable.json")
+
+    # 기존 시간표 데이터 불러오기
+    if os.path.exists(FILE_PATH):
+        with open(FILE_PATH, "r", encoding="utf-8") as f:
+            TIMETABLE = json.load(f)
+    
     """시간표 알림 함수
 
     Args:
@@ -44,8 +52,8 @@ def timetableReminder(isTest, want):
             
             logging.info(f"WEEKDAYS:{txt_today} KEEP RUNNING")
             
-            if now_time in TIMETABLE[txt_today] and now_time not in notified_times:
-                subject = TIMETABLE[txt_today][now_time]
+            if now_time in BASIC_TIMETABLE[txt_today] and now_time not in notified_times:
+                subject = BASIC_TIMETABLE[txt_today][now_time]
                 toaster.show_toast(
                     f"{txt_today} Class Notification",
                     f"Next Class: {subject}",

@@ -1,30 +1,23 @@
-import sys, os, logging
-from data.filePath import assets_dir_func
+import sys, json, os, logging
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
 from PyQt5.QtGui import QIcon
-from data.all_data import TIMETABLE, SHORTENED_TIMETABLE
-from function.todayVariable import todayVariable
-from function.isMWF import isMWF
-from function.isShortened import isShortened
-
-isActivated = True
+from function.functions import todayVariable, isMWF, isShortened, assets_dir_func, data_dir_func
 
 class systemTray:
-    """Windows System Tray Function
-    """
+    """Windows System Tray Function"""
+    
     def __init__(self):
         self.app = QApplication(sys.argv)
-
         tray_icon_path = assets_dir_func("hansei.ico")
         self.tray_icon = QSystemTrayIcon(QIcon(tray_icon_path), self.app)
 
         self.menu = QMenu()
-        
+
         settings_icon_path = assets_dir_func(("time.ico"))
         self.show_action = QAction(QIcon(settings_icon_path), "Shortened_Mode", self.menu)
         self.show_action.triggered.connect(self.show_shortended_timetable)
         self.menu.addAction(self.show_action)
-        
+
         settings_icon_path = assets_dir_func(("settings.ico"))
         self.show_action = QAction(QIcon(settings_icon_path), "Settings", self.menu)
         self.show_action.triggered.connect(self.show_settings)
@@ -36,24 +29,33 @@ class systemTray:
         self.menu.addAction(self.quit_action)
 
         self.tray_icon.setContextMenu(self.menu)
-
         self.update_tooltip()
-        
         self.tray_icon.show()
 
     def update_tooltip(self):
-        global isActivated
+        # 저장할 파일 경로
+        TIMETABLE_PATH = data_dir_func("timetable.json")
         
-        _, txt_today, _, _ = todayVariable(isTest=False)
+        # 기존 시간표 데이터 불러오기
+        if os.path.exists(TIMETABLE_PATH):
+            with open(TIMETABLE_PATH, "r", encoding="utf-8") as f:
+                timetable = json.load(f)
+            
+        BASIC_TIMETABLE = timetable["BASIC_TIMETABLE"]
+        SHORTENED_TIMETABLE = timetable["SHORTENED_TIMETABLE"]
+    
+        global isActivated
+        _, txt_today, _, _ = todayVariable(isTest=True)
+        logging.debug(txt_today)
         if isShortened():
             key = "MWF" if isMWF(txt_today) else "TT"
             today_schedule = SHORTENED_TIMETABLE.get(key, {})
             isActivated = True
         else:
-            today_schedule = TIMETABLE.get(txt_today, {})
+            today_schedule = BASIC_TIMETABLE.get(txt_today, {})
             isActivated = False
-
-            
+        
+        logging.debug(today_schedule)
         # 시간표를 문자열로 변환
         timetable_message = "\n".join([f"{time}: {task}" for time, task in today_schedule.items()])
 
@@ -67,18 +69,14 @@ class systemTray:
         self.update_tooltip()
         self.tray_icon.showMessage(
             "Shortened Timetable Mode",
-            f"{comment}",  # 기존 툴팁 내용 사용
+            f"{comment}",
             QSystemTrayIcon.Information,
             2000
         )
 
     def show_settings(self):
-        self.tray_icon.showMessage(
-            "Timetable",
-            self.tray_icon.toolTip(),  # 기존 툴팁 내용 사용
-            QSystemTrayIcon.Information,
-            2000
-        )
+        from function.systemTrayFunc import settings
+        settings(self)
 
     def run(self):
         if self.app.exec_() == 0:

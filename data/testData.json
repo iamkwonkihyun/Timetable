@@ -1,26 +1,4 @@
-# import datetime
-#
-# # 저장할 파일명
-# filename = "dummy_timetable.py"
-#
-# # 요일 리스트
-# days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-#
-# # 파일 쓰기
-# with open(filename, "w", encoding="utf-8") as f:
-#     f.write("TIMETABLE = {\n")
-#     for day in days:
-#         f.write(f'    "{day}": {{\n')
-#         for hour in range(24):
-#             for minute in range(60):
-#                 time_str = f"{hour:02}:{minute:02}"
-#                 f.write(f'        "{time_str}": "Dummy Class",\n')
-#         f.write("    },\n")
-#     f.write("}\n")
-#
-# print(f"{filename} 파일 저장 완료")
-
-TIMETABLE = {
+{
     "Monday": {
         "00:00": "Dummy Class",
         "00:01": "Dummy Class",
@@ -1461,7 +1439,7 @@ TIMETABLE = {
         "23:56": "Dummy Class",
         "23:57": "Dummy Class",
         "23:58": "Dummy Class",
-        "23:59": "Dummy Class",
+        "23:59": "Dummy Class"
     },
     "Tuesday": {
         "00:00": "Dummy Class",
@@ -2903,7 +2881,7 @@ TIMETABLE = {
         "23:56": "Dummy Class",
         "23:57": "Dummy Class",
         "23:58": "Dummy Class",
-        "23:59": "Dummy Class",
+        "23:59": "Dummy Class"
     },
     "Wednesday": {
         "00:00": "Dummy Class",
@@ -4345,7 +4323,7 @@ TIMETABLE = {
         "23:56": "Dummy Class",
         "23:57": "Dummy Class",
         "23:58": "Dummy Class",
-        "23:59": "Dummy Class",
+        "23:59": "Dummy Class"
     },
     "Thursday": {
         "00:00": "Dummy Class",
@@ -5787,7 +5765,7 @@ TIMETABLE = {
         "23:56": "Dummy Class",
         "23:57": "Dummy Class",
         "23:58": "Dummy Class",
-        "23:59": "Dummy Class",
+        "23:59": "Dummy Class"
     },
     "Friday": {
         "00:00": "Dummy Class",
@@ -7229,7 +7207,7 @@ TIMETABLE = {
         "23:56": "Dummy Class",
         "23:57": "Dummy Class",
         "23:58": "Dummy Class",
-        "23:59": "Dummy Class",
+        "23:59": "Dummy Class"
     },
     "Saturday": {
         "00:00": "Dummy Class",
@@ -8671,7 +8649,7 @@ TIMETABLE = {
         "23:56": "Dummy Class",
         "23:57": "Dummy Class",
         "23:58": "Dummy Class",
-        "23:59": "Dummy Class",
+        "23:59": "Dummy Class"
     },
     "Sunday": {
         "00:00": "Dummy Class",
@@ -10113,6 +10091,6 @@ TIMETABLE = {
         "23:56": "Dummy Class",
         "23:57": "Dummy Class",
         "23:58": "Dummy Class",
-        "23:59": "Dummy Class",
-    },
+        "23:59": "Dummy Class"
+    }
 }
