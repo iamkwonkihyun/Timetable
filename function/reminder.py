@@ -3,16 +3,15 @@ from win10toast import ToastNotifier
 from function.functions import todayVariable, resetVariable, isBirthday, isWeekday, isMWF, data_dir_func
 
 TIMETABLE_PATH = data_dir_func("timetable.json")
-BREAKTIME_PATH = data_dir_func("breaktime.json")
 
 # 기존 시간표 데이터 불러오기
 os.path.exists(TIMETABLE_PATH)
-os.path.exists(BREAKTIME_PATH)
 
 with open(TIMETABLE_PATH, "r", encoding="utf-8") as f:
-    TIMETABLE = json.load(f)
-with open(BREAKTIME_PATH, "r", encoding='utf-8') as f:
-    BREAKTIME = json.load(f)
+    timetable = json.load(f)
+
+BASIC_TIMETABLE = timetable["BASIC_TIMETABLE"]
+BREAKTIME = timetable["BREAKTIME"]
 
 # toaster 객체 생성
 toaster = ToastNotifier()
@@ -53,8 +52,8 @@ def timetableReminder(isTest, want):
             
             logging.info(f"WEEKDAYS:{txt_today} KEEP RUNNING")
             
-            if now_time in TIMETABLE[txt_today] and now_time not in notified_times:
-                subject = TIMETABLE[txt_today][now_time]
+            if now_time in BASIC_TIMETABLE[txt_today] and now_time not in notified_times:
+                subject = BASIC_TIMETABLE[txt_today][now_time]
                 toaster.show_toast(
                     f"{txt_today} Class Notification",
                     f"Next Class: {subject}",

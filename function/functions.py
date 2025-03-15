@@ -2,6 +2,20 @@ import datetime, logging, json, os
 from pathlib import Path
 from win10toast import ToastNotifier
 
+# 토스터 객체 생성
+toaster = ToastNotifier()
+oneNotification = set()
+
+# global 변수
+yesterday = None
+isActivated = False
+
+# 상대경로
+FUNCTION_DIR = Path(__file__).resolve().parent
+BASE_DIR = FUNCTION_DIR.parent
+ASSETS_DIR = BASE_DIR / "assets"
+DATA_DIR = BASE_DIR / "data"
+
 def todayVariable(isTest):
     """오늘 요일, 시간 정보를 알려주는 함수
 
@@ -18,9 +32,9 @@ def todayVariable(isTest):
     if isTest:
         logging.debug("todayVariable MODE: TEST")
         num_today = "03-11"
-        txt_today = "Tuesday"
+        txt_today = "Monday"
         now_time = "12:2"
-        end_time = "16:1"
+        end_time = "08:40"
         return num_today, txt_today, now_time, end_time
     else:
         num_today = today.strftime("%m-%d")
@@ -28,8 +42,6 @@ def todayVariable(isTest):
         now_time = today.strftime("%H:%M")
         end_time = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
         return num_today, txt_today, now_time, end_time
-    
-yesterday = None
 
 def resetVariable(today:str):
     """하루가 지나면 특정 변수를 초기화 시키는 함수
@@ -77,7 +89,6 @@ def isWeekday(today:str, isTest:bool, want:bool):
             return False
 
 
-isActivated = False
 
 def isShortened(): 
     """단축 수업 인지 확인하는 함수
@@ -87,12 +98,13 @@ def isShortened():
     """
     global isActivated
     
-    if isActivated == True:
-        isActivated = False
-        return True
-    elif isActivated == False:
-        isActivated = True
-        return False
+    # if isActivated == True:
+    #     isActivated = False
+    #     return True
+    # elif isActivated == False:
+    #     isActivated = True
+    #     return False
+    return False
     
 def isMWF(today:str):
     """오늘이 월수금 인지 확인해주는 함수
@@ -110,8 +122,6 @@ def isMWF(today:str):
     
 
 
-toaster = ToastNotifier()
-oneNotification = set()
 
 def isBirthday(today:str):
     """오늘이 생일이면 축하해주는 함수
@@ -137,12 +147,6 @@ def isBirthday(today:str):
         )
         oneNotification.add(today)
         
-
-
-FUNCTION_DIR = Path(__file__).resolve().parent
-BASE_DIR = FUNCTION_DIR.parent
-ASSETS_DIR = BASE_DIR / "assets"
-DATA_DIR = BASE_DIR / "data"
 
 def assets_dir_func(fileName=""):
     return str(ASSETS_DIR / fileName)

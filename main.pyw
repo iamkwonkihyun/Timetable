@@ -35,7 +35,7 @@ logging.basicConfig(
     encoding="utf-8"
 )
 
-logging.info("MAEK log folder: GOOD")
+logging.info("MAKE log folder: GOOD")
 
 # 프로그램 실행 체크 함수(isTest=True: vscode 실행 시, isTest=False: main.pyw 실행 시)
 programCheck(programName=programName, isTest=isTest)
