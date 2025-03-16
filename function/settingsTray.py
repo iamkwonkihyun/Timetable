@@ -1,21 +1,13 @@
-import tkinter as tk
+import json, sys, tkinter as tk
 from tkinter import messagebox
-import json, sys, os, logging
-from function.reminder import data_dir_func
+from function.mainFunctions import getAllTimetable
 
-def settings(tray):
+def settingsTray(tray):
     # 변수
     entries = {}
 
-    # 시간표 불러오기
-    FILE_PATH = data_dir_func("timetable.json")
-    if os.path.exists(FILE_PATH):
-        with open(FILE_PATH, "r", encoding="utf-8") as f:
-            timetable = json.load(f)
-    else:
-        timetable = {"BASIC_TIMETABLE": {}}
-
-    BASIC_TIMETABLE = timetable["BASIC_TIMETABLE"]
+    allTimetablePath, allTimetable = getAllTimetable()
+    basicTimetable = allTimetable["BASIC_TIMETABLE"]
 
     # 창 띄우기
     root = tk.Tk()
@@ -23,8 +15,8 @@ def settings(tray):
     root.geometry("500x500")
 
     # 요일과 시간 리스트 생성
-    days = list(BASIC_TIMETABLE.keys())
-    times = sorted({time for schedule in BASIC_TIMETABLE.values() for time in schedule.keys()})
+    days = list(basicTimetable.keys())
+    times = sorted({time for schedule in basicTimetable.values() for time in schedule.keys()})
 
     # 프로그램 종료 함수
     def exit_program():
@@ -40,21 +32,19 @@ def settings(tray):
                 for day, schedule in entries.items():
                     for time, entry in schedule.items():
                         new_value = entry.get().strip()
-                        old_value = BASIC_TIMETABLE.get(day, {}).get(time, "")
+                        old_value = basicTimetable.get(day, {}).get(time, "")
 
                         # 값이 변경되었을 경우만 업데이트
                         if new_value != old_value:
-                            if day not in BASIC_TIMETABLE:
-                                BASIC_TIMETABLE[day] = {}
-                            BASIC_TIMETABLE[day][time] = new_value
+                            if day not in basicTimetable:
+                                basicTimetable[day] = {}
+                            basicTimetable[day][time] = new_value
                             updated = True
 
                 if updated:  # 변경 사항이 있을 때만 파일 저장
-                    with open(FILE_PATH, "w", encoding="utf-8") as f:
-                        json.dump(timetable, f, ensure_ascii=False, indent=4)
+                    with open(allTimetablePath, "w", encoding="utf-8") as f:
+                        json.dump(allTimetable, f, ensure_ascii=False, indent=4)
                     messagebox.showinfo("timetable", "저장 성공")
-                    
-                    # 시간표를 저장한 후 툴팁 업데이트
                     tray.update_tooltip()
                 else:
                     messagebox.showinfo("timetable", "변경된 내용이 없습니다.")
@@ -76,7 +66,7 @@ def settings(tray):
             entries[time] = {}
 
             for i, day in enumerate(days):
-                text = BASIC_TIMETABLE.get(day, {}).get(time, "")
+                text = basicTimetable.get(day, {}).get(time, "")
                 entry = tk.Entry(second_root, width=15)
                 entry.insert(0, text)
                 entry.grid(row=j+1, column=i+1)

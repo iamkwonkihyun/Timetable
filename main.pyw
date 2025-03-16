@@ -2,11 +2,11 @@
 import logging, os, threading
 from logging.handlers import TimedRotatingFileHandler
 from function.programCheck import programCheck
-from function.systemTray import systemTray
-from function.reminder import timetableReminder
+from function.mainTray import mainTray
+from function.timetableReminder import timetableReminder
 
 # True = all Test Mode, False = All real Time Mode
-isTest = True
+isTest = False
 # True = 주중, False = 주말( isTest가 False 일땐 wnat 아무 기능 안함)
 want = True
 # program name
@@ -35,17 +35,15 @@ logging.basicConfig(
     encoding="utf-8"
 )
 
-logging.info("MAKE log folder: GOOD")
+logging.info("{:<15}: GOOD :)".format("makeLogFolder"))
 
 # 프로그램 실행 체크 함수(isTest=True: vscode 실행 시, isTest=False: main.pyw 실행 시)
 programCheck(programName=programName, isTest=isTest)
-
-logging.info("START PROGRAM")
             
 if __name__ == "__main__":
-    #timetableReminder만 백그라운드에서 단독 실행
-    timetable_reminder = threading.Thread(target=timetableReminder, args=(isTest, want), daemon=True)
-    timetable_reminder.start()
+    #timetableReminderFunc 백그라운드에서 단독 실행
+    timetableReminderFunc = threading.Thread(target=timetableReminder, args=(isTest, want), daemon=True)
+    timetableReminderFunc.start()
     #system tray 설정
-    app = systemTray()
+    app = mainTray()
     app.run()
