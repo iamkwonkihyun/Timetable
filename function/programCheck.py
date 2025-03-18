@@ -1,44 +1,43 @@
-import logging, win32com.client, sys
-from win10toast import ToastNotifier
-
-toaster = ToastNotifier()
+import win32com.client
+from function.mainFunctions import toasterFunc, loggingFunc
+from function.trayFunctions import exitProgramFunc
 
 # 프로그램 실행 검사
-def programCheck(programName, isTest):
-    checkTime = 0
-    """프로그램 작동 검사 함수
+def programCheck(programName, isTest:bool=False):
+    """프로그램 실행 검사 함수
 
     Args:
         programName (str): 실행되는 프로그램 이름
         isTest (bool): 테스트 할 때
     """
+    
+    checkTime = 0
+    
     if isTest == True:
-        logging.debug("isRunning Function: TEST MODE")
+        loggingFunc(title="programCheck", comment="TEST MODE")
         pass
     else:
         for program in programName:
-            logging.info("PROGRAM CHECKING: ···")
+            loggingFunc(title="programCheck", comment="···")
             wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
             service = wmi.ConnectServer(".", "root\\cimv2")
             process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
             if len(process_list) > 0:
-                toaster.show_toast(
-                    "Hello!",
-                    "Timetable.pyw is Running!\nNice To Meet you :)",
+                toasterFunc(
+                    title="Hello!",
+                    comments="Timetable.pyw is Running!\nNice To Meet you :)",
                     duration=3,
-                    threaded=True,
                 )
-                logging.info("PROGRAM CHECKING: GOOD :)")
+                loggingFunc(title="programCheck", comment="GOOD :)")
+                loggingFunc(title="programCheck", comment="PROGRAM START")
                 break
             else:
-                toaster.show_toast(
-                    "Hello!",
-                    "oh.. bad news..\nsomething went wrong.. :(",
-                    duration=3,
-                    threaded=True,
-                )
-                logging.info("PROGRAM CHECKING: BAD :(")
                 checkTime += 1
                 if checkTime == 2:
-                    ("PROGRAM OFF")
-                    sys.exit()
+                    toasterFunc(
+                        title="WHAT?!",
+                        comments="oh.. bad news..\nsomething went wrong.. :(",
+                        duration=3,
+                    )
+                    loggingFunc(title="programCheck", comment="BAD :(")
+                    exitProgramFunc()
