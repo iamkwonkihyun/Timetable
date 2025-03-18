@@ -1,8 +1,8 @@
-import sys, logging
+import sys
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from PyQt5.QtGui import QIcon
-from function.mainFunctions import todayVariable, isMWF, isShortened, assets_dir_func, getAllTimetable
-from function.trayFunctions import makeTrayMenu
+from function.mainFunctions import todayVariable, isMWF, isShortened, assets_dir_func, getAllTimetable, loggingFunc
+from function.trayFunctions import makeTrayMenu, exitProgramFunc
 class mainTray:
     """Windows System Tray Function"""
     
@@ -39,10 +39,10 @@ class mainTray:
         )
 
         self.menuIcon.setContextMenu(self.menu)
-        self.update_tooltip()
+        self.updateTooltip()
         self.menuIcon.show()
 
-    def update_tooltip(self, isShortened:bool=False):
+    def updateTooltip(self, isShortened:bool=False):
         
         _, allTimetable = getAllTimetable()
         
@@ -63,11 +63,11 @@ class mainTray:
             timetable_message = "No schedule available"
 
         self.menuIcon.setToolTip(timetable_message)
-
+    
     def show_shortended_timetable(self):
         isActivated = isShortened()
         comment = "Activated" if isActivated else "Deactivated"
-        self.update_tooltip(isShortened=isActivated)
+        self.updateTooltip(isShortened=isActivated)
         self.tray_icon.showMessage(
             "Shortened Timetable Mode",
             f"{comment}",
@@ -81,5 +81,5 @@ class mainTray:
 
     def run(self):
         if self.app.exec_() == 0:
-            logging.info("{:<15}: OFF".format("PROGRAM"))
-            sys.exit()
+            loggingFunc("{:<15}: OFF".format("PROGRAM"))
+            exitProgramFunc()

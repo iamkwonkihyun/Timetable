@@ -1,5 +1,5 @@
-import logging, time
-from function.mainFunctions import todayVariable, resetVariable,isBirthday, isWeekday, isMWF, getAllTimetable, toasterFunc
+import time
+from function.mainFunctions import todayVariable, resetVariable,isBirthday, isWeekday, isMWF, getAllTimetable, toasterFunc, loggingFunc
 
 # notification 한 번만 보내게 해줄 변수
 notified_times = set()
@@ -11,6 +11,7 @@ def timetableReminder(isTest, want):
         isTest (bool): 테스트 할 때
         want (bool): 주중 주말 선택
     """
+    
     _, allTimetable = getAllTimetable()
     basicTimetable = allTimetable["BASIC_TIMETABLE"]
     breaktime = allTimetable["BREAKTIME"]
@@ -29,14 +30,14 @@ def timetableReminder(isTest, want):
 
         # 오늘이 주말인지 주중인지 확인 (isTest=True: 조종 가능, isTest=False: 조종 불가 )
         if isWeekday(today=txt_today, isTest=isTest, want=want):
-            logging.info("{:<15}: {} KEEP RUNNING".format("WEEKDAYS", txt_today))
+            loggingFunc(title="weekdays", comment="KEEP RUNNING")
             if now_time in basicTimetable[txt_today] and now_time not in notified_times:
                 subject = basicTimetable[txt_today][now_time]
                 toasterFunc(
                     title=f"{txt_today} Class Notification",
                     comments=f"Next Class: {subject}",
                 )
-                logging.info("{:<15}: {txt_today} | {now_time} | {subject}".format("notified"))
+                loggingFunc(title="notified", comment=f"{txt_today} | {now_time} | {subject}")
                 notified_times.add(now_time)
             
             # 오늘이 월수금인지 확인 후, 해당하는 BREAKTIME 선택
@@ -48,10 +49,10 @@ def timetableReminder(isTest, want):
                     title=f"{txt_today} Class Notification",
                     comments=f"10 minutes left until the {nClass} rest time",
                     )
-                logging.info("{:<15}: {txt_today} | {now_time} | {subject}".format("notified"))
+                loggingFunc(title="notified", comment=f"{txt_today} | {now_time} | {subject}")
                 notified_times.add(end_time)
                 
-            time.sleep(1)
         else:
-            logging.info("{:<15}: {} KEEP RUNNING".format("WEEKDAYS", txt_today))
-            time.sleep(1)
+            loggingFunc(title="weekend", comment="KEEP RUNNING")
+        
+        time.sleep(1)

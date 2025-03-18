@@ -1,21 +1,24 @@
-import logging, win32com.client, sys
-from function.mainFunctions import toasterFunc
+import win32com.client
+from function.mainFunctions import toasterFunc, loggingFunc
+from function.trayFunctions import exitProgramFunc
 
 # 프로그램 실행 검사
 def programCheck(programName, isTest:bool=False):
-    checkTime = 0
     """프로그램 실행 검사 함수
 
     Args:
         programName (str): 실행되는 프로그램 이름
         isTest (bool): 테스트 할 때
     """
+    
+    checkTime = 0
+    
     if isTest == True:
-        logging.info("programCheck   : TEST MODE")
+        loggingFunc(title="programCheck", comment="TEST MODE")
         pass
     else:
         for program in programName:
-            logging.info("programCheck   : ···")
+            loggingFunc(title="programCheck", comment="···")
             wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
             service = wmi.ConnectServer(".", "root\\cimv2")
             process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
@@ -25,8 +28,8 @@ def programCheck(programName, isTest:bool=False):
                     comments="Timetable.pyw is Running!\nNice To Meet you :)",
                     duration=3,
                 )
-                logging.info("programCheck   : GOOD :)")
-                logging.info("programCheck   : PROGRAM START")
+                loggingFunc(title="programCheck", comment="GOOD :)")
+                loggingFunc(title="programCheck", comment="PROGRAM START")
                 break
             else:
                 checkTime += 1
@@ -36,5 +39,5 @@ def programCheck(programName, isTest:bool=False):
                         comments="oh.. bad news..\nsomething went wrong.. :(",
                         duration=3,
                     )
-                    logging.info("programCheck   : BAD :(")
-                    sys.exit()
+                    loggingFunc(title="programCheck", comment="BAD :(")
+                    exitProgramFunc()

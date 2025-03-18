@@ -30,6 +30,7 @@ def todayVariable(isTest:bool=False):
     today = datetime.datetime.today()
     
     if isTest:
+        loggingFunc(title="todayVariable", comment="TEST MODE")
         logging.info("todayVariable  : TEST MODE")
         num_today = "03-11"
         txt_today = "Monday"
@@ -77,7 +78,7 @@ def isWeekday(today:str, isTest:bool=False, want:bool=False):
     """
     
     if isTest:
-        logging.info("isWeekday      : TEST MODE")
+        loggingFunc(title="isWeekday", comment="TEST MODE")
         if want:
             return True
         else:
@@ -125,8 +126,8 @@ def isBirthday(today:str, oneNotified):
     with open(allUserDataPath, "r", encoding='utf-8') as f:
         allUserData = json.load(f)
     
-    if today == allUserData["userData"]["BIRTHDAY"] and today not in oneNotified:
-        logging.info("isBirthday     : HAPPY BIRTHDAY TO YOU!!!")
+    if today == allUserData["USERDATA"]["BIRTHDAY"] and today not in oneNotified:
+        loggingFunc(title="isBirthday",comment="HAPPY BIRTHDAY TO YOU!!!")
         toaster.show_toast(
             "HAPPY BIRTHDAY TO YOU!!!",
             "Today is your birthday!!🎂",
@@ -192,3 +193,16 @@ def toasterFunc(title:str, comments:str, duration:int=None, threaded:bool=True):
             duration=duration,
             threaded=threaded
         )
+    
+def loggingFunc(level:str="info", title="", comment:str=""):
+    """logging 함수
+
+    Args:
+        level (str, optional): 로그 레벨. Defaults to "info".
+        title (str, optional): 제목. Defaults to "".
+        comment (str, optional): 내용. Defaults to "".
+    """
+    if level == "info":
+        logging.info("{:<15}: {}".format(title, comment))
+    elif level == "debug":
+        logging.debug("{:<15}: {}".format(title, comment))
