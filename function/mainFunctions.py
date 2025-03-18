@@ -17,17 +17,18 @@ DATA_DIR = BASE_DIR / "data"
 
 def todayVariable(isTest:bool=False):
     """오늘 요일, 시간 정보를 주는 함수
-
+    
     Args:
         isTest (bool): 테스트 할 때
-
+    
     Returns:
         all_returns(str): 오늘 요일, 날짜, 끝나는 시간 등 반환
         
         num_today = "MM-DD", txt_today = "Monday", now_time  = "HH:MM", end_time  = "HH:MM" + 10 minutes
     """
-
+    
     today = datetime.datetime.today()
+    
     if isTest:
         logging.info("todayVariable  : TEST MODE")
         num_today = "03-11"
@@ -51,8 +52,9 @@ def resetVariable(today:str):
     Returns:
         bool: 어제와 요일이 같으면 False를, 어제와 요일이 다르면 True를 반환
     """
+
     global yesterday
-    
+
     if yesterday == None:
         yesterday = today
 

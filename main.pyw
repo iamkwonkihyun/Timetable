@@ -6,7 +6,7 @@ from function.mainTray import mainTray
 from function.timetableReminder import timetableReminder
 
 # True = all Test Mode, False = All real Time Mode
-isTest = False
+isTest = True
 # True = 주중, False = 주말( isTest가 False 일땐 wnat 아무 기능 안함)
 want = True
 # program name

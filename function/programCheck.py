@@ -1,5 +1,5 @@
 import logging, win32com.client, sys
-from mainFunctions import toasterFunc
+from function.mainFunctions import toasterFunc
 
 # 프로그램 실행 검사
 def programCheck(programName, isTest:bool=False):

@@ -1,36 +1,46 @@
 import sys, logging
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from PyQt5.QtGui import QIcon
 from function.mainFunctions import todayVariable, isMWF, isShortened, assets_dir_func, getAllTimetable
-
+from function.trayFunctions import makeTrayMenu
 class mainTray:
     """Windows System Tray Function"""
     
     def __init__(self):
         self.app = QApplication(sys.argv)
-        tray_icon_path = assets_dir_func("hansei.ico")
-        self.tray_icon = QSystemTrayIcon(QIcon(tray_icon_path), self.app)
+        
+        menuIconPath = assets_dir_func("hanseiLogo.ico")
+        self.menuIcon = QSystemTrayIcon(QIcon(menuIconPath), self.app)
 
         self.menu = QMenu()
 
-        time_icon_path = assets_dir_func(("time.ico"))
-        self.time_action = QAction(QIcon(time_icon_path), "Shortened_Mode", self.menu)
-        self.time_action.triggered.connect(self.show_shortended_timetable)
-        self.menu.addAction(self.time_action)
+        makeTrayMenu(
+            self=self,
+            icon="time.ico",
+            title="Shortened_Timetable",
+            function=self.show_shortended_timetable,
+            action="shortenedTimetable"
+        )
 
-        settings_icon_path = assets_dir_func(("settings.ico"))
-        self.settings_action = QAction(QIcon(settings_icon_path), "Settings", self.menu)
-        self.settings_action.triggered.connect(self.show_settings)
-        self.menu.addAction(self.settings_action)
+        makeTrayMenu(
+            self=self,
+            icon="settings.ico",
+            title="Settings",
+            function=self.show_settings,
+            action="settings"
+        )
+        
+        makeTrayMenu(
+            self=self,
+            icon="exit.ico",
+            title="Exit",
+            function=self.app.exit,
+            action="exit"
+        )
 
-        exit_icon_patt = assets_dir_func(("exit.ico"))
-        self.exit_action = QAction(QIcon(exit_icon_patt), "Exit", self.menu)
-        self.exit_action.triggered.connect(self.app.quit)
-        self.menu.addAction(self.exit_action)
-
-        self.tray_icon.setContextMenu(self.menu)
+        self.menuIcon.setContextMenu(self.menu)
         self.update_tooltip()
-        self.tray_icon.show()
+        self.menuIcon.show()
 
     def update_tooltip(self, isShortened:bool=False):
         
@@ -52,7 +62,7 @@ class mainTray:
         if not timetable_message:
             timetable_message = "No schedule available"
 
-        self.tray_icon.setToolTip(timetable_message)
+        self.menuIcon.setToolTip(timetable_message)
 
     def show_shortended_timetable(self):
         isActivated = isShortened()
