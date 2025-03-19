@@ -1,9 +1,9 @@
 import win32com.client
-from function.mainFunctions import toasterFunc, loggingFunc
+from function.mainFunctions import toasterFunc, loggingFunc, testFunc, pushNotification
 from function.trayFunctions import exitProgramFunc
 
 # 프로그램 실행 검사
-def programCheck(programName, isTest:bool=False):
+def programCheck(programName, isTest=testFunc()):
     """프로그램 실행 검사 함수
 
     Args:
@@ -25,9 +25,10 @@ def programCheck(programName, isTest:bool=False):
             if len(process_list) > 0:
                 toasterFunc(
                     title="Hello!",
-                    comments="Timetable.pyw is Running!\nNice To Meet you :)",
+                    comments="Timetable.pyw is Running!\nNice to meet you :)",
                     duration=3,
                 )
+                pushNotification("Hello!, Timetable is Running! Nice to meet you")
                 loggingFunc(title="programCheck", comment="GOOD :)")
                 loggingFunc(title="programCheck", comment="PROGRAM START")
                 break

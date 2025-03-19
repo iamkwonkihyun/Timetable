@@ -1,10 +1,11 @@
 import time
-from function.mainFunctions import todayVariable, resetVariable,isBirthday, isWeekday, isMWF, getAllTimetable, toasterFunc, loggingFunc
+from function.mainFunctions import (todayVariable, resetVariable,isBirthday, isWeekday, isMWF, 
+                                    getAllTimetable, toasterFunc, loggingFunc, pushNotification,
+                                    testFunc)
 
-# notification 한 번만 보내게 해줄 변수
 notified_times = set()
 
-def timetableReminder(isTest, want):
+def timetableReminder(isTest=testFunc(), want=testFunc()):
     """시간표 알림 함수
 
     Args:
@@ -37,6 +38,7 @@ def timetableReminder(isTest, want):
                     title=f"{txt_today} Class Notification",
                     comments=f"Next Class: {subject}",
                 )
+                pushNotification(f"Next Class: {subject}")
                 loggingFunc(title="notified", comment=f"{txt_today} | {now_time} | {subject}")
                 notified_times.add(now_time)
             
@@ -49,6 +51,7 @@ def timetableReminder(isTest, want):
                     title=f"{txt_today} Class Notification",
                     comments=f"10 minutes left until the {nClass} rest time",
                     )
+                pushNotification(f"10 minutes left until the {subject} rest time")
                 loggingFunc(title="notified", comment=f"{txt_today} | {now_time} | {subject}")
                 notified_times.add(end_time)
                 

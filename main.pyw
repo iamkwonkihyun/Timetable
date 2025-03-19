@@ -6,10 +6,6 @@ from function.mainTray import mainTray
 from function.timetableReminder import timetableReminder
 from function.mainFunctions import loggingFunc
 
-# True = all Test Mode, False = All real Time Mode
-isTest = True
-# True = 주중, False = 주말( isTest가 False 일땐 wnat 아무 기능 안함)
-want = True
 # program name
 programName = ["pyw.exe", "pythonw.exe"]
 
@@ -39,12 +35,11 @@ logging.basicConfig(
 loggingFunc(title="makeLogFolder", comment="GOOD :)")
 
 # 프로그램 실행 체크 함수(isTest=True: vscode 실행 시, isTest=False: main.pyw 실행 시)
-programCheck(programName=programName, isTest=isTest)
+programCheck(programName=programName)
             
 if __name__ == "__main__":
     #timetableReminderFunc 백그라운드에서 단독 실행
-    loggingFunc("debug", "hello, world")
-    timetableReminderFunc = threading.Thread(target=timetableReminder, args=(isTest, want), daemon=True)
+    timetableReminderFunc = threading.Thread(target=timetableReminder, args=(), daemon=True)
     timetableReminderFunc.start()
     #system tray 설정
     app = mainTray()

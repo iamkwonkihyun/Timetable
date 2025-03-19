@@ -1,4 +1,4 @@
-import datetime, logging, json
+import datetime, logging, json, requests
 from pathlib import Path
 from win10toast import ToastNotifier
 
@@ -15,7 +15,13 @@ BASE_DIR = FUNCTION_DIR.parent
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 
-def todayVariable(isTest:bool=False):
+def testFunc(istest=False):
+    if istest:
+        return True
+    else:
+        return False
+
+def todayVariable(isTest=testFunc()):
     """오늘 요일, 시간 정보를 주는 함수
     
     Args:
@@ -34,8 +40,8 @@ def todayVariable(isTest:bool=False):
         logging.info("todayVariable  : TEST MODE")
         num_today = "03-11"
         txt_today = "Monday"
-        now_time = "12:2"
-        end_time = "08:40"
+        now_time = "12:30"
+        end_time = "08:4"
         return num_today, txt_today, now_time, end_time
     else:
         num_today = today.strftime("%m-%d")
@@ -65,7 +71,7 @@ def resetVariable(today:str):
     else:
         return False
 
-def isWeekday(today:str, isTest:bool=False, want:bool=False):
+def isWeekday(today:str, isTest=testFunc(), want:bool=False):
     """오늘이 주말인지 주중인지 확인하는 함수
 
     Args:
@@ -168,6 +174,7 @@ def getAllTimetable(choice:str=None):
     Returns:
         str, dict: allTimetable.json의 경로를 str로 data를 dict로 반환
     """
+    
     ALLTIMETABLE_PATH = data_dir_func("allTimetable.json")
     
     with open(ALLTIMETABLE_PATH, "r", encoding="utf-8") as f:
@@ -193,7 +200,7 @@ def toasterFunc(title:str, comments:str, duration:int=None, threaded:bool=True):
             duration=duration,
             threaded=threaded
         )
-    
+
 def loggingFunc(level:str="info", title="", comment:str=""):
     """logging 함수
 
@@ -206,3 +213,10 @@ def loggingFunc(level:str="info", title="", comment:str=""):
         logging.info("{:<15}: {}".format(title, comment))
     elif level == "debug":
         logging.debug("{:<15}: {}".format(title, comment))
+
+def pushNotification(message):
+    """폰으로 알림 보내는 함수
+    """
+
+    requests.post(f"https://ntfy.sh/Timetable", data=message.encode("utf-8"))
+    loggingFunc(title="pushNotification", comment="SUCCESE :)")
