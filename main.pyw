@@ -1,10 +1,9 @@
 # import library, package
 import logging, os, threading
 from logging.handlers import TimedRotatingFileHandler
-from function.programCheck import programCheck
 from function.mainTray import mainTray
-from function.timetableReminder import timetableReminder
-from function.mainFunctions import loggingFunc
+from function.notificationFunc import notificationFunc
+from function.mainFunctions import loggingFunc, programCheck
 
 # program name
 programName = ["pyw.exe", "pythonw.exe"]
@@ -35,11 +34,11 @@ logging.basicConfig(
 loggingFunc(title="makeLogFolder", comment="GOOD :)")
 
 # 프로그램 실행 체크 함수(isTest=True: vscode 실행 시, isTest=False: main.pyw 실행 시)
-programCheck(programName=programName)
-            
+
 if __name__ == "__main__":
+    programCheck(programName=programName)
     #timetableReminderFunc 백그라운드에서 단독 실행
-    timetableReminderFunc = threading.Thread(target=timetableReminder, args=(), daemon=True)
+    timetableReminderFunc = threading.Thread(target=notificationFunc, args=(), daemon=True)
     timetableReminderFunc.start()
     #system tray 설정
     app = mainTray()

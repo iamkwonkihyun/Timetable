@@ -1,7 +1,7 @@
 import tkinter as tk
 from functools import partial
-from function.mainFunctions import getAllTimetable
-from function.trayFunctions import exitProgramFunc, setTimetableFunc
+from function.mainFunctions import getAllTimetable, exitProgramFunc
+from function.trayFunctions import setTimetableFunc
 
 def settingsTray(tray):
     # 변수

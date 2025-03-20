@@ -1,12 +1,17 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from PyQt5.QtGui import QIcon
-from function.mainFunctions import todayVariable, isMWF, isShortened, assets_dir_func, getAllTimetable, loggingFunc
-from function.trayFunctions import makeTrayMenu, exitProgramFunc
+from function.trayFunctions import makeTrayMenu
+from function.mainFunctions import (todayVariable, isMWF, isShortened, assets_dir_func, getAllTimetable, loggingFunc,
+                                    convert_timetable, exitProgramFunc)
+
 class mainTray:
     """Windows System Tray Function"""
     
     def __init__(self):
+        
+        loggingFunc(title="MT_init", comment="MAKING ···")
+        
         self.app = QApplication(sys.argv)
         
         menuIconPath = assets_dir_func("hanseiLogo.ico")
@@ -18,7 +23,7 @@ class mainTray:
             self=self,
             icon="time.ico",
             title="Shortened_Timetable",
-            function=self.show_shortended_timetable,
+            function=self.showShortenedTimetable,
             action="shortenedTimetable"
         )
 
@@ -26,7 +31,7 @@ class mainTray:
             self=self,
             icon="settings.ico",
             title="Settings",
-            function=self.show_settings,
+            function=self.showSettings,
             action="settings"
         )
         
@@ -37,18 +42,20 @@ class mainTray:
             function=self.app.exit,
             action="exit"
         )
-
+        
         self.menuIcon.setContextMenu(self.menu)
         self.updateTooltip()
         self.menuIcon.show()
 
     def updateTooltip(self, isShortened:bool=False):
         
+        loggingFunc(title="MT_updateTooltip", comment="MAKING ···")
+        
         _, allTimetable = getAllTimetable()
         
         basicTimetable = allTimetable["BASIC_TIMETABLE"]
         shortenedTimetable = allTimetable["SHORTENED_TIMETABLE"]
-        
+        basicTimetable = convert_timetable(timetable=basicTimetable)
         _, txt_today, _, _ = todayVariable()
         
         if isShortened:
@@ -64,7 +71,10 @@ class mainTray:
 
         self.menuIcon.setToolTip(timetable_message)
     
-    def show_shortended_timetable(self):
+    def showShortenedTimetable(self):
+        
+        loggingFunc(title="MT_showShortenedTimetable", comment="MAKING ···")
+        
         isActivated = isShortened()
         comment = "Activated" if isActivated else "Deactivated"
         self.updateTooltip(isShortened=isActivated)
@@ -75,11 +85,15 @@ class mainTray:
             2000
         )
 
-    def show_settings(self):
+    def showSettings(self):
+        
+        loggingFunc(title="MT_showSettings", comment="MAKING ···")
+        
         from function.settingsTray import settingsTray
         settingsTray(self)
 
     def run(self):
+        loggingFunc(title="MT_run", comment="MAKING ···")
         if self.app.exec_() == 0:
             loggingFunc("{:<15}: OFF".format("PROGRAM"))
             exitProgramFunc()
