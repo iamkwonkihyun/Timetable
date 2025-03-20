@@ -1,4 +1,4 @@
-import json, sys, tkinter as tk
+import json, tkinter as tk
 from functools import partial
 from tkinter import messagebox
 from PyQt5.QtWidgets import QAction
@@ -6,12 +6,6 @@ from PyQt5.QtGui import QIcon
 from function.mainFunctions import assets_dir_func
 
 # mainTray.py
-
-# 프로그램 종료 함수
-def exitProgramFunc():
-    """프로그램 종료 함수
-    """
-    sys.exit()
 
 # timetable 저장 함수
 def saveTimetableFunc(entries, basicTimetable, allTimetablePath, allTimetable, tray, second_root):

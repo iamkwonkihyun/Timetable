@@ -1,10 +1,10 @@
 import time
-from function.mainFunctions import todayVariable, resetVariable,isBirthday, isWeekday, isMWF, getAllTimetable, toasterFunc, loggingFunc
+from function.mainFunctions import (todayVariable, resetVariable,isBirthday, isWeekday, isMWF, 
+                                    getAllTimetable, toasterFunc, loggingFunc, pushNotification,)
 
-# notification 한 번만 보내게 해줄 변수
 notified_times = set()
 
-def timetableReminder(isTest, want):
+def notificationFunc():
     """시간표 알림 함수
 
     Args:
@@ -19,7 +19,7 @@ def timetableReminder(isTest, want):
     while True:
         
         # 모든 today, time 값 받아오기(isTest=True: 시간 설정 가능, isTest=False: 현실 시간)
-        num_today, txt_today, now_time, end_time = todayVariable(isTest=isTest)
+        num_today, txt_today, now_time, end_time = todayVariable()
         
         # 하루가 지날 때 마다 notified_times 변수 초기화
         if resetVariable(txt_today):
@@ -29,17 +29,19 @@ def timetableReminder(isTest, want):
         isBirthday(num_today, notified_times)
 
         # 오늘이 주말인지 주중인지 확인 (isTest=True: 조종 가능, isTest=False: 조종 불가 )
-        if isWeekday(today=txt_today, isTest=isTest, want=want):
-            loggingFunc(title="weekdays", comment="KEEP RUNNING")
+        if isWeekday(today=txt_today):
+            loggingFunc(title="weekdays", comment=f"{txt_today} KEEP RUNNING")
+            
             if now_time in basicTimetable[txt_today] and now_time not in notified_times:
                 subject = basicTimetable[txt_today][now_time]
                 toasterFunc(
                     title=f"{txt_today} Class Notification",
                     comments=f"Next Class: {subject}",
                 )
+                pushNotification(message=f"{txt_today} Class Notification\nNext Class: {subject}")
                 loggingFunc(title="notified", comment=f"{txt_today} | {now_time} | {subject}")
                 notified_times.add(now_time)
-            
+                
             # 오늘이 월수금인지 확인 후, 해당하는 BREAKTIME 선택
             break_time_key = "MWF" if isMWF(txt_today) else "TT"
             
@@ -49,10 +51,10 @@ def timetableReminder(isTest, want):
                     title=f"{txt_today} Class Notification",
                     comments=f"10 minutes left until the {nClass} rest time",
                     )
+                pushNotification(message=f"{txt_today} Class Notification\n10 minutes left until the {subject} rest time")
                 loggingFunc(title="notified", comment=f"{txt_today} | {now_time} | {subject}")
                 notified_times.add(end_time)
-                
         else:
-            loggingFunc(title="weekend", comment="KEEP RUNNING")
+            loggingFunc(title="weekend", comment=f"{txt_today} KEEP RUNNING")
         
         time.sleep(1)
