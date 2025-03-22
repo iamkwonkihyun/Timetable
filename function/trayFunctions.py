@@ -1,8 +1,8 @@
 import json, tkinter as tk
 from functools import partial
 from tkinter import messagebox
-from PyQt5.QtWidgets import QAction
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QAction
 from function.mainFunctions import assets_dir_func
 
 # mainTray.py
@@ -40,12 +40,12 @@ def saveTimetableFunc(entries, basicTimetable, allTimetablePath, allTimetable, t
 def setTimetableFunc(days, times, entries, basicTimetable, allTimetable, allTimetablePath, tray):
     second_root = tk.Tk()
     second_root.title("시간표 편집")
-    second_root.geometry("1200x500")
+    second_root.geometry("1600x400")
 
     tk.Label(second_root, text="요일", width=10, borderwidth=1, relief="solid").grid(row=0, column=0)
 
     for i, day in enumerate(days):
-        tk.Label(second_root, text=day, width=15, borderwidth=1, relief="solid").grid(row=0, column=i+1)
+        tk.Label(second_root, text=day, width=20, borderwidth=1, relief="solid").grid(row=0, column=i+1)
 
     for j, time in enumerate(times):
         tk.Label(second_root, text=time, width=10, borderwidth=1, relief="solid").grid(row=j+1, column=0)
@@ -53,7 +53,7 @@ def setTimetableFunc(days, times, entries, basicTimetable, allTimetable, allTime
 
         for i, day in enumerate(days):
             text = basicTimetable.get(day, {}).get(time, "")
-            entry = tk.Entry(second_root, width=15)
+            entry = tk.Entry(second_root, width=20)
             entry.insert(0, text)
             entry.grid(row=j+1, column=i+1)
             entries.setdefault(day, {})[time] = entry
