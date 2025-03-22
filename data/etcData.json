@@ -1,0 +1,9 @@
+{
+    "USER_DATA": {
+        "BIRTHDAY": "03-09",
+        "NAME": "Kwon kihyun"
+    },
+    "PROGRAM_DATA": {
+        "PROGRAM_NAME": ["pyw.exe", "pythonw.exe"]
+    }
+}

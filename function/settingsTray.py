@@ -1,13 +1,13 @@
 import tkinter as tk
 from functools import partial
-from function.mainFunctions import getAllTimetable, exitProgramFunc
+from function.mainFunctions import getJsonData, exitProgramFunc
 from function.trayFunctions import setTimetableFunc
 
 def settingsTray(tray):
     # 변수
     entries = {}
 
-    allTimetablePath, allTimetable = getAllTimetable()
+    allTimetable, allTimetablePath = getJsonData(jsonFileName="allTimetable.json", needPath=True)
     basicTimetable = allTimetable["BASIC_TIMETABLE"]
 
     # 창 띄우기

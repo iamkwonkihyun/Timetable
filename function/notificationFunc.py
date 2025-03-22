@@ -1,60 +1,43 @@
 import time
-from function.mainFunctions import (todayVariable, resetVariable,isBirthday, isWeekday, isMWF, 
-                                    getAllTimetable, toasterFunc, loggingFunc, pushNotification,)
+from function.mainFunctions import (
+    todayVariable, resetVariable, isBirthday, isWeekday, isMWF, 
+    getJsonData, toasterFunc, loggingFunc, pushNotification
+)
 
 notified_times = set()
 
-def notificationFunc():
-    """시간표 알림 함수
+def notify(title, message, time_key):
+    if time_key not in notified_times:
+        toasterFunc(title=title, comments=message)
+        pushNotification(message=f"{title}\n{message}")
+        loggingFunc(title="notified", comment=f"{title} | {time_key}")
+        notified_times.add(time_key)
 
-    Args:
-        isTest (bool): 테스트 할 때
-        want (bool): 주중 주말 선택
-    """
-    
-    _, allTimetable = getAllTimetable()
-    basicTimetable = allTimetable["BASIC_TIMETABLE"]
-    breaktime = allTimetable["BREAKTIME"]
+def notificationFunc():
+    allTimetable = getJsonData(jsonFileName="allTimetable.json")
+    basicTimetable, breaktime = allTimetable["BASIC_TIMETABLE"], allTimetable["BREAKTIME"]
     
     while True:
+        numToday, txtToday, nextTime = todayVariable()
         
-        # 모든 today, time 값 받아오기(isTest=True: 시간 설정 가능, isTest=False: 현실 시간)
-        num_today, txt_today, now_time, end_time = todayVariable()
-        
-        # 하루가 지날 때 마다 notified_times 변수 초기화
-        if resetVariable(txt_today):
+        if resetVariable(txtToday):
             notified_times.clear()
         
-        # 오늘이 생일인지 확인하는 함수
-        isBirthday(num_today, notified_times)
-
-        # 오늘이 주말인지 주중인지 확인 (isTest=True: 조종 가능, isTest=False: 조종 불가 )
-        if isWeekday(today=txt_today):
-            loggingFunc(title="weekdays", comment=f"{txt_today} KEEP RUNNING")
+        isBirthday(numToday, notified_times)
+        
+        if isWeekday(txtToday):
+            loggingFunc(title="weekdays", comment=f"{txtToday} KEEP RUNNING")
             
-            if now_time in basicTimetable[txt_today] and now_time not in notified_times:
-                subject = basicTimetable[txt_today][now_time]
-                toasterFunc(
-                    title=f"{txt_today} Class Notification",
-                    comments=f"Next Class: {subject}",
-                )
-                pushNotification(message=f"{txt_today} Class Notification\nNext Class: {subject}")
-                loggingFunc(title="notified", comment=f"{txt_today} | {now_time} | {subject}")
-                notified_times.add(now_time)
-                
-            # 오늘이 월수금인지 확인 후, 해당하는 BREAKTIME 선택
-            break_time_key = "MWF" if isMWF(txt_today) else "TT"
-            
-            if end_time in breaktime[break_time_key] and end_time not in notified_times:
-                nClass = breaktime[break_time_key][end_time]
-                toasterFunc(
-                    title=f"{txt_today} Class Notification",
-                    comments=f"10 minutes left until the {nClass} rest time",
-                    )
-                pushNotification(message=f"{txt_today} Class Notification\n10 minutes left until the {subject} rest time")
-                loggingFunc(title="notified", comment=f"{txt_today} | {now_time} | {subject}")
-                notified_times.add(end_time)
+            if nextTime in basicTimetable[txtToday]:
+                notify(title=f"{txtToday} Class Notification",
+                    message=f"Next Class: {basicTimetable[txtToday][nextTime]}",
+                    time_key=nextTime)
+            break_key = "MWF" if isMWF(txtToday) else "TT"
+            if nextTime in breaktime[break_key]:
+                notify(title=f"{txtToday} Break Notification",
+                    message=f"10 minutes left until {breaktime[break_key][nextTime]} rest time",
+                    time_key=nextTime)
         else:
-            loggingFunc(title="weekend", comment=f"{txt_today} KEEP RUNNING")
+            loggingFunc(title="weekend", comment=f"{txtToday} KEEP RUNNING")
         
         time.sleep(1)
