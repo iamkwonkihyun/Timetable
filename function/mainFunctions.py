@@ -7,7 +7,7 @@ from pathlib import Path
 toaster = ToastNotifier()
 
 # 테스트 변수
-isWeek, isTest = True, True
+isWeek, isTest = True, False
 
 # global 변수
 yesterday = None
