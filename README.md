@@ -7,8 +7,7 @@
 > ## How to Start?
 >
 > > -   레포지토리를 복제합니다<br/>
-> > -   폴더를 열고 cmd창을 열어서<br/>
-> >     `pip install -r requirements.txt`<br/>
+> > -   폴더를 열고 cmd창을 열어서<br/> > > `pip install -r requirements.txt`<br/>
 > >     필요한 라이브러리들을 설치한다<br/>
 > > -   설치가 완료되었으면 폴더에 있는 main.pyw를 더블 클릭한다<br/>
 > > -   FINISH.<br/>
@@ -25,7 +24,7 @@
 > ## What features does it have? What features does it have?
 >
 > > 1.  다음 교시 과목 알림
-> > 2.  수업 종료시간 10분 전 알림
+> > 2.  쉬는시간 10분 전 알림
 > > 3.  system tray에 있는 아이콘 호버 시 전체 시간표 나옴
 > > 4.  단축 수업 시 단축 수업 모드로 변환 가능
 > > 5.  ~~종료 기능~~
