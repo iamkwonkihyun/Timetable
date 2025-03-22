@@ -2,8 +2,10 @@ import sys
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from PyQt5.QtGui import QIcon
 from function.trayFunctions import makeTrayMenu
-from function.mainFunctions import (todayVariable, isMWF, isShortened, assets_dir_func, getJsonData,
-                                    convert_timetable, exitProgramFunc)
+from function.mainFunctions import (
+    todayVariable, isMWF, isShortened, assets_dir_func,
+    getJsonData, convert_timetable, exitProgramFunc
+)
 
 class mainTray:
     """Windows System Tray Function"""

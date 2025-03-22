@@ -1,16 +1,17 @@
-import datetime, logging, json, requests, win32com.client, sys, os
+import datetime, logging, json, requests, win32com.client, sys, os, shutil
 from logging.handlers import TimedRotatingFileHandler
-from pathlib import Path
 from win10toast import ToastNotifier
+from pathlib import Path
 
 # 토스터 객체 생성
 toaster = ToastNotifier()
 
+# 테스트 변수
+isWeek, isTest = True, True
+
 # global 변수
 yesterday = None
 isActivated = False
-isTest = False
-isWeek = True
 
 # 상대경로
 FUNCTION_DIR = Path(__file__).resolve().parent
@@ -18,13 +19,11 @@ BASE_DIR = FUNCTION_DIR.parent
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 
-# 프로그램 실행 검사
-def programCheck(isTest=isTest):
+def programCheck(isTest:bool=isTest):
     """프로그램 실행 검사 함수
 
     Args:
-        programName (str): 실행되는 프로그램 이름
-        isTest (bool): 테스트 할 때
+        isTest (bool, optional): 테스트 인자. Defaults to isTest.
     """
     
     checkTime = 0
@@ -63,40 +62,54 @@ def programCheck(isTest=isTest):
                     loggingFunc(title="programCheck", comment="PROGRAM OFF")
                     exitProgramFunc()
 
-def todayVariable(isTest:bool=isTest):
-    """오늘 요일, 시간 정보를 주는 함수
-    
+def notifyFunc(title:str, message:str, timeKey:str, notifiedTimes:set):
+    """알림 함수
+
     Args:
-        isTest (bool): 테스트 할 때
+        title (str): 제목
+        message (str): 내용
+        timeKey (str): 시간
+        notifiedTimes (set): notifiedTimes 변수
+    """
     
+    if timeKey not in notifiedTimes:
+        toasterFunc(title=title, comments=message)
+        pushNotification(message=f"{title}\n{message}")
+        loggingFunc(title="notified", comment=f"{title} | {timeKey}")
+        notifiedTimes.add(timeKey)
+
+def todayVariable(isTest:bool=isTest):
+    """오늘 날짜, 요일, 시간을 반환하는 함수
+
+    Args:
+        isTest (bool, optional): 테스트 인자.
+
     Returns:
-        all_returns(str): 오늘 요일, 날짜, 끝나는 시간 등 반환
-        
-        num_today = "MM-DD", txt_today = "Monday", now_time  = "HH:MM" + 10 minutes
+        allReturns: numToday(MM-DD), txtToday(Monday), nextTime(HH:MM) 날짜, 요일, 시간을 str로 반환
     """
     
     today = datetime.datetime.today()
     
     if isTest:
         loggingFunc(title="todayVariable", comment="TEST MODE")
-        num_today = "03-22"
-        txt_today = "Monday"
-        next_time = "08:40"
-        return num_today, txt_today, next_time
+        numToday = "03-22"
+        txtToday = "Monday"
+        nextTime = "08:40"
+        return numToday, txtToday, nextTime
     else:
-        num_today = today.strftime("%m-%d")
-        txt_today = today.strftime("%A")
-        next_time = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
-        return num_today, txt_today, next_time
+        numToday = today.strftime("%m-%d")
+        txtToday = today.strftime("%A")
+        nextTime = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
+        return numToday, txtToday, nextTime
 
 def resetVariable(today:str):
-    """하루가 지나면 특정 변수를 초기화 시키는 함수
+    """하루가 지나면 특정 변수를 초기화 하는 함수
 
     Args:
-        today (str): 오늘 요일의 값을 받고 어제와 요일이 다르면 변수를 초기화 시킴 
+        today (str): 오늘 날짜
 
     Returns:
-        bool: 어제와 요일이 같으면 False를, 어제와 요일이 다르면 True를 반환
+        bool: 다른 날이면 True를 같은 날이면 False를 반환
     """
     
     global yesterday
@@ -115,12 +128,12 @@ def isWeekday(today:str, isTest:bool=isTest, isWeek:bool=isWeek):
     """오늘이 주말인지 주중인지 확인하는 함수
 
     Args:
-        today (str): 오늘 요일을 받음
-        isTest (bool): 테스트 할 때
-        want (bool): 주중, 주말을 설정할 수 있음( isTest=True 일 때 )
+        today (str): 오늘 날짜
+        isTest (bool, optional): 테스트 인자. Defaults to isTest.
+        isWeek (bool, optional): 테스트 인자 주말 주중 선택. Defaults to isWeek.
 
     Returns:
-        bool: 오늘이 주말이면 False를 주중이면 True를 반환
+        bool: 주말이면 True를 주말이면 False를 반환
     """
     
     if isTest:
@@ -139,8 +152,9 @@ def isShortened():
     """단축 수업 함수
 
     Returns:
-        bool: !return
+        bool: !isActicated
     """
+    
     global isActivated
     isActivated = not isActivated
     return isActivated
@@ -160,10 +174,11 @@ def isMWF(today:str):
         return False
 
 def isBirthday(today:str, oneNotified:set):
-    """오늘이 생일이면 축하해주는 함수
+    """오늘이 생일인지 확인해주는 함수
 
     Args:
-        today (str): 오늘 요일(num_today(ex. 01-01))을 받아옴 
+        today (str): 오늘 날짜
+        oneNotified (set): set 변수
     """
     
     allUserData = getJsonData("etcData.json")
@@ -183,50 +198,53 @@ def assets_dir_func(fileName:str):
     """assets 상대경로 함수
 
     Args:
-        fileName (str, optional): 파일 이름. Defaults to "".
+        fileName (str): 파일 이름.
 
     Returns:
         str: 파일까지의 상대경로를 str로 반환
     """
+    
     return str(ASSETS_DIR / fileName)
 
 def data_dir_func(fileName:str):
     """data 상대경로 함수
 
     Args:
-        fileName (str, optional): 파일 이름. Defaults to "".
+        fileName (str): 파일 이름.
 
     Returns:
         str: 파일까지의 상대경로를 str로 반환
     """
     return str(DATA_DIR / fileName)
 
-def getJsonData(jsonFileName:str, rootKey:str=False, subKey:str=False, needPath:bool=False):
-    """allTimetable.json 데이터를 주는 함수
+def getJsonData(jsonFileName:str, rootKey:str=None, subKey:str=None, needPath:bool=False):
+    """json 데이터를 반환하는 함수
 
     Args:
-        choice (str, optional): 키 값(없으면 allTimetable.json의 모든 data를 반환). Defaults to None.
+        jsonFileName (str): json 파일 이름
+        rootKey (str, optional): 루트키. Defaults to False.
+        subKey (str, optional): 서브키. Defaults to False.
+        needPath (bool, optional): 파일 경로 필요하면 True. Defaults to False.
 
     Returns:
-        str, dict: allTimetable.json의 경로를 str로 data를 dict로 반환
+        allReturns: 
     """
     
     JSONDATA_PATH = data_dir_func(jsonFileName)
     
     with open(JSONDATA_PATH, "r", encoding="utf-8") as f:
         jsonData = json.load(f)
-        
     
-    if rootKey != False and subKey != False:
-        if needPath:
-            return jsonData[rootKey][subKey], JSONDATA_PATH
-        return jsonData[rootKey][subKey]
+    if rootKey is None:
+        result = jsonData
+    elif subKey is None:
+        result = jsonData[rootKey]
     else:
-        if needPath:
-            return jsonData, JSONDATA_PATH
-        return jsonData
+        result = jsonData[rootKey][subKey]
 
-def toasterFunc(title:str, comments:str, duration:int=5, threaded:bool=True):
+    return (result, JSONDATA_PATH) if needPath else result
+
+def toasterFunc(title:str, comments:str, duration:int=0, threaded:bool=True):
     """toaster 함수
 
     Args:
@@ -235,6 +253,7 @@ def toasterFunc(title:str, comments:str, duration:int=5, threaded:bool=True):
         duration (int, optional): 지속시간. Defaults to None.
         threaded (bool, optional): 스레드. Defaults to True.
     """
+    
     toaster.show_toast(
             f"{title}",
             f"{comments}",
@@ -242,14 +261,15 @@ def toasterFunc(title:str, comments:str, duration:int=5, threaded:bool=True):
             threaded=threaded
         )
 
-def loggingFunc(level:str="info", title="", comment:str=""):
+def loggingFunc(title:str, comment:str, level:str="info"):
     """logging 함수
 
     Args:
         level (str, optional): 로그 레벨. Defaults to "info".
-        title (str, optional): 제목. Defaults to "".
-        comment (str, optional): 내용. Defaults to "".
+        title (str): 제목
+        comment (str): 내용
     """
+    
     if level == "info":
         logging.info("{:<25}: {}".format(title, comment))
     elif level == "debug":
@@ -266,7 +286,14 @@ def pushNotification(message:str):
     loggingFunc(title="pushNotification", comment="SUCCESE :)")
     
 def convert_timetable(timetable):
-    """시간표 데이터를 '1교시, 2교시' 형태로 변환"""
+    """시간표 시간을 교시로 변환해주는 함수
+
+    Args:
+        timetable (dict): 시간표
+
+    Returns:
+        시간표: 교시로 변환된 시간표
+    """
     converted = {}
     
     for day, schedule in timetable.items():
@@ -283,25 +310,34 @@ def exitProgramFunc():
     logging.shutdown()
     sys.exit()
 
-def makeLogFolder():
-    # 로그 폴더 경로
+def makeLogFolder(isTest=isTest):
+    """로그 생성 함수
+
+    Args:
+        isTest (bool, optional): 테스트 인자. Defaults to isTest.
+    """
+    
     log_folder = "logs"
+    
+    if isTest:
+        shutil.rmtree(log_folder, ignore_errors=True)
+        loggingFunc(title="makeLogFolder", comment="TEST MODE")
+    
+    os.makedirs(log_folder, exist_ok=True)
 
-    # 로그 폴더가 없으면 생성
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
-
-    # 하루마다 새로운 로그 파일 생성, 최대 7개 유지
+    log_file = os.path.join(log_folder, "app.log")
+    
+    logger = logging.getLogger()
+    logger.handlers.clear()
+    
     handler = TimedRotatingFileHandler(
-        os.path.join(log_folder, "app.log"), when="D", interval=1, backupCount=7, encoding="utf-8"
+        log_file, when="D", interval=1, backupCount=7, encoding="utf-8"
     )
-    handler.suffix = "%Y-%m-%d.log"
 
     logging.basicConfig(
-        filename="logs/app.log",
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
-        encoding="utf-8"
+        handlers=[handler]
     )
-    
+        
     loggingFunc(title="makeLogFolder", comment="GOOD :)")
