@@ -1,4 +1,4 @@
-import datetime, logging, json, requests, win32com.client, sys, os, shutil
+import datetime, logging, json, requests, win32com.client, sys, os, shutil, subprocess
 from logging.handlers import TimedRotatingFileHandler
 from win10toast import ToastNotifier
 from pathlib import Path
@@ -7,7 +7,7 @@ from pathlib import Path
 toaster = ToastNotifier()
 
 # 테스트 변수
-isWeek, isTest = True, False
+isWeek, isTest = True, False 
 
 # global 변수
 yesterday = None
@@ -18,6 +18,16 @@ FUNCTION_DIR = Path(__file__).resolve().parent
 BASE_DIR = FUNCTION_DIR.parent
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
+
+def watchLogFunc(isTest=isTest):
+    cmd = ["powershell", "-Command", "Get-Content logs/app.log -Wait"]
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if isTest:
+        try:
+            for line in process.stdout:
+                print(line, end="")
+        except KeyboardInterrupt:
+                process.terminate()
 
 def programCheck(isTest:bool=isTest):
     """프로그램 실행 검사 함수
