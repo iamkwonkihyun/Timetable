@@ -1,9 +1,12 @@
 import tkinter as tk
-from function.mainFunctions import getJsonData, exitProgramFunc
-from function.trayFunctions import setTimetableFunc
 from functools import partial
+from function.trayFunctions import setTimetableFunc
+from function.mainFunctions import getJsonData, exitProgramFunc
 
 def settingsTray(tray):
+    """settings tray 함수
+    """
+
     # 변수
     entries = {}
 

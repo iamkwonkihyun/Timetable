@@ -1,4 +1,4 @@
-import datetime, logging, json, requests, win32com.client, sys, os, shutil, subprocess
+import datetime, logging, json, requests, win32com.client, sys, os, shutil, subprocess, threading
 from logging.handlers import TimedRotatingFileHandler
 from win10toast import ToastNotifier
 from pathlib import Path
@@ -7,7 +7,7 @@ from pathlib import Path
 toaster = ToastNotifier()
 
 # 테스트 변수
-isWeek, isTest = True, False 
+isWeek, isTest = True, True 
 
 # global 변수
 yesterday = None
@@ -19,10 +19,12 @@ BASE_DIR = FUNCTION_DIR.parent
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 
-def watchLogFunc(isTest=isTest):
-    cmd = ["powershell", "-Command", "Get-Content logs/app.log -Wait"]
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+def watchLogFunc(isTest:bool=isTest):
     if isTest:
+        loggingFunc(title="isWeekday", comment="TEST MODE")
+        loggingFunc(title="todayVariable", comment="TEST MODE")
+        cmd = ["powershell", "-Command", "Get-Content logs/app.log -Wait"]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         try:
             for line in process.stdout:
                 print(line, end="")
@@ -38,14 +40,18 @@ def programCheck(isTest:bool=isTest):
     
     checkTime = 0
     programName = getJsonData(jsonFileName="etcData.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
+    
     if isTest == True:
         toasterFunc(
-            title="Test Mode",
             comments="This is Test Mode",
         )
         pushNotification("This is Test Mode")
         loggingFunc(title="programCheck", comment="TEST MODE")
-        pass
+        
+        log_thread = threading.Thread(target=watchLogFunc, args=(True,), daemon=True)
+        log_thread.start()
+        
+        return
     else:
         for program in programName:
             loggingFunc(title="programCheck", comment="···")
@@ -54,19 +60,17 @@ def programCheck(isTest:bool=isTest):
             process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
             if len(process_list) > 0:
                 toasterFunc(
-                    title="Hello!",
-                    comments="Timetable.pyw is Running!\nNice to meet you :)",
+                    comments="Hello!\nTimetable.pyw is Running!\nNice to meet you :)",
                 )
                 pushNotification(message="Hello!\nTimetable is Running! Nice to meet you")
-                loggingFunc(title="programCheck", comment="GOOD :)") 
+                loggingFunc(title="programCheck", comment="GOOD :)")
                 loggingFunc(title="programCheck", comment="PROGRAM START")
                 break
             else:
                 checkTime += 1
                 if checkTime == 2:
                     toasterFunc(
-                        title="WHAT?!",
-                        comments="oh.. bad news..\nsomething went wrong.. :(",
+                        comments="What?!\noh No.. bad news..\nsomething went wrong.. :(",
                     )
                     loggingFunc(title="programCheck", comment="BAD :(")
                     loggingFunc(title="programCheck", comment="PROGRAM OFF")
@@ -83,8 +87,8 @@ def notifyFunc(title:str, message:str, timeKey:str, notifiedTimes:set):
     """
     
     if timeKey not in notifiedTimes:
-        toasterFunc(title=title, comments=message)
-        pushNotification(message=f"{title}\n{message}")
+        toasterFunc(comments=f"{title}\n{message}")
+        pushNotification(message=f"\n{title}\n{message}")
         loggingFunc(title="notified", comment=f"{title} | {timeKey}")
         notifiedTimes.add(timeKey)
 
@@ -101,16 +105,14 @@ def todayVariable(isTest:bool=isTest):
     today = datetime.datetime.today()
     
     if isTest:
-        loggingFunc(title="todayVariable", comment="TEST MODE")
-        numToday = "03-22"
-        txtToday = "Monday"
-        nextTime = "08:40"
-        return numToday, txtToday, nextTime
-    else:
-        numToday = today.strftime("%m-%d")
-        txtToday = today.strftime("%A")
-        nextTime = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
-        return numToday, txtToday, nextTime
+        return "03-22", "Monday", "09:30"
+
+    numToday = today.strftime("%m-%d")
+    txtToday = today.strftime("%A")
+    nextTime = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
+    
+    return numToday, txtToday, nextTime
+
 
 def resetVariable(today:str):
     """하루가 지나면 특정 변수를 초기화 하는 함수
@@ -145,18 +147,10 @@ def isWeekday(today:str, isTest:bool=isTest, isWeek:bool=isWeek):
     Returns:
         bool: 주말이면 True를 주말이면 False를 반환
     """
-    
+
     if isTest:
-        loggingFunc(title="isWeekday", comment="TEST MODE")
-        if isWeek:
-            return True
-        else:
-            return False
-    else:
-        if today not in ["Saturday", "Sunday"]:
-            return True
-        else:
-            return False
+        return isWeek
+    return today not in ["Saturday", "Sunday"]
 
 def isShortened(): 
     """단축 수업 함수
@@ -195,13 +189,8 @@ def isBirthday(today:str, oneNotified:set):
     
     if today == allUserData["USER_DATA"]["BIRTHDAY"] and today not in oneNotified:
         loggingFunc(title="isBirthday",comment="HAPPY BIRTHDAY TO YOU!!!")
-        toaster.show_toast(
-            "HAPPY BIRTHDAY TO YOU!!!",
-            "Today is your birthday!!🎂",
-            duration=10,
-            threaded=True
-        )
-        pushNotification(title="HAPPY BIRTHDAY TO YOU!!!", message="Today is your birthday!!🎂")
+        toasterFunc(comments="HAPPY BIRTHDAY TO YOU!!!\nToday is your birthday!!🎂")
+        pushNotification(message="HAPPY BIRTHDAY TO YOU!!!\nToday is your birthday!!🎂")
         oneNotified.add(today)
 
 def assets_dir_func(fileName:str):
@@ -254,7 +243,7 @@ def getJsonData(jsonFileName:str, rootKey:str=None, subKey:str=None, needPath:bo
 
     return (result, JSONDATA_PATH) if needPath else result
 
-def toasterFunc(title:str, comments:str, duration:int=0, threaded:bool=True):
+def toasterFunc(comments:str, duration:int=0, threaded:bool=True, iconPath:str=None):
     """toaster 함수
 
     Args:
@@ -265,10 +254,11 @@ def toasterFunc(title:str, comments:str, duration:int=0, threaded:bool=True):
     """
     
     toaster.show_toast(
-            f"{title}",
+            "🐭Ratatouille :",
             f"{comments}",
             duration=duration,
-            threaded=threaded
+            threaded=threaded,
+            icon_path=iconPath
         )
 
 def loggingFunc(title:str, comment:str, level:str="info"):
@@ -291,8 +281,8 @@ def pushNotification(message:str):
     Args:
         message (str): 폰으로 보낼 메세지
     """
-
-    requests.post(f"https://ntfy.sh/Timetable", data=message.encode("utf-8"))
+    comments = f"🐭Ratatouille : {message}"
+    requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
     loggingFunc(title="pushNotification", comment="SUCCESE :)")
     
 def convert_timetable(timetable):
