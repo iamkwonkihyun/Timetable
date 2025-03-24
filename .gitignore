@@ -6,3 +6,4 @@ __pycache__/
 *.txt
 
 testData.json
+makeRelease.py

@@ -19,18 +19,6 @@ BASE_DIR = FUNCTION_DIR.parent
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 
-def watchLogFunc(isTest:bool=isTest):
-    if isTest:
-        loggingFunc(title="isWeekday", comment="TEST MODE")
-        loggingFunc(title="todayVariable", comment="TEST MODE")
-        cmd = ["powershell", "-Command", "Get-Content logs/app.log -Wait"]
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        try:
-            for line in process.stdout:
-                print(line, end="")
-        except KeyboardInterrupt:
-                process.terminate()
-
 def programCheck(isTest:bool=isTest):
     """프로그램 실행 검사 함수
 
@@ -38,21 +26,21 @@ def programCheck(isTest:bool=isTest):
         isTest (bool, optional): 테스트 인자. Defaults to isTest.
     """
     
-    checkTime = 0
-    programName = getJsonData(jsonFileName="etcData.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
-    
     if isTest == True:
         toasterFunc(
-            comments="This is Test Mode",
+            title="isTest is True",
+            comment="now, Test Mode",
         )
-        pushNotification("This is Test Mode")
+        pushNotification(title="This is Test Mode", comment="test mode")
         loggingFunc(title="programCheck", comment="TEST MODE")
         
         log_thread = threading.Thread(target=watchLogFunc, args=(True,), daemon=True)
         log_thread.start()
         
-        return
+        return True
     else:
+        checkTime = 0
+        programName = getJsonData(jsonFileName="etcData.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
         for program in programName:
             loggingFunc(title="programCheck", comment="···")
             wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
@@ -60,23 +48,23 @@ def programCheck(isTest:bool=isTest):
             process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
             if len(process_list) > 0:
                 toasterFunc(
-                    comments="Hello!\nTimetable.pyw is Running!\nNice to meet you :)",
+                    title="😀Hello!",
+                    comment="Timetable is Running!\nNice to meet you :)",
                 )
-                pushNotification(message="Hello!\nTimetable is Running! Nice to meet you")
+                pushNotification(title="😀Hello", comment="Timetable is Running! Nice to meet you")
                 loggingFunc(title="programCheck", comment="GOOD :)")
-                loggingFunc(title="programCheck", comment="PROGRAM START")
-                break
+                loggingFunc(title="program", comment="RUNNING")
             else:
                 checkTime += 1
-                if checkTime == 2:
+                if checkTime == len(programName):
                     toasterFunc(
-                        comments="What?!\noh No.. bad news..\nsomething went wrong.. :(",
+                        title="🤯What?!",
+                        comment="oh No.. bad news..\nsomething went wrong.. :(",
                     )
-                    loggingFunc(title="programCheck", comment="BAD :(")
-                    loggingFunc(title="programCheck", comment="PROGRAM OFF")
+                    loggingFunc(title="programCheck", comment="FAILED")
                     exitProgramFunc()
 
-def notifyFunc(title:str, message:str, timeKey:str, notifiedTimes:set):
+def notifyFunc(title:str, message:str, time:str, notifiedTimes:set):
     """알림 함수
 
     Args:
@@ -86,11 +74,11 @@ def notifyFunc(title:str, message:str, timeKey:str, notifiedTimes:set):
         notifiedTimes (set): notifiedTimes 변수
     """
     
-    if timeKey not in notifiedTimes:
-        toasterFunc(comments=f"{title}\n{message}")
-        pushNotification(message=f"\n{title}\n{message}")
-        loggingFunc(title="notified", comment=f"{title} | {timeKey}")
-        notifiedTimes.add(timeKey)
+    if time not in notifiedTimes:
+        toasterFunc(title=title, comment=message)
+        pushNotification(title=title, comment=message)
+        loggingFunc(title="notified", comment=f"{title} | {time}")
+        notifiedTimes.add(time)
 
 def todayVariable(isTest:bool=isTest):
     """오늘 날짜, 요일, 시간을 반환하는 함수
@@ -189,7 +177,7 @@ def isBirthday(today:str, oneNotified:set):
     
     if today == allUserData["USER_DATA"]["BIRTHDAY"] and today not in oneNotified:
         loggingFunc(title="isBirthday",comment="HAPPY BIRTHDAY TO YOU!!!")
-        toasterFunc(comments="HAPPY BIRTHDAY TO YOU!!!\nToday is your birthday!!🎂")
+        toasterFunc(title="HAPPY BIRTHDAY TO YOU!!!", comment="Today is your birthday!!🎂")
         pushNotification(message="HAPPY BIRTHDAY TO YOU!!!\nToday is your birthday!!🎂")
         oneNotified.add(today)
 
@@ -216,34 +204,43 @@ def data_dir_func(fileName:str):
     """
     return str(DATA_DIR / fileName)
 
-def getJsonData(jsonFileName:str, rootKey:str=None, subKey:str=None, needPath:bool=False):
-    """json 데이터를 반환하는 함수
+def getJsonData(jsonFileName: str, rootKey: str = None, subKey: str = None, needPath: bool = False):
+    """JSON 데이터를 반환하는 함수
 
     Args:
-        jsonFileName (str): json 파일 이름
-        rootKey (str, optional): 루트키. Defaults to False.
-        subKey (str, optional): 서브키. Defaults to False.
-        needPath (bool, optional): 파일 경로 필요하면 True. Defaults to False.
+        jsonFileName (str): JSON 파일 이름
+        rootKey (str, optional): 루트 키. Defaults to None.
+        subKey (str, optional): 서브 키. Defaults to None.
+        needPath (bool, optional): 파일 경로 필요 여부. Defaults to False.
 
     Returns:
-        allReturns: 
+        result or (result, JSONDATA_PATH): 요청된 JSON 데이터 또는 파일 경로 포함한 튜플
     """
-    
-    JSONDATA_PATH = data_dir_func(jsonFileName)
-    
+
+    if getattr(sys, 'frozen', False):  
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(".")
+
+    JSONDATA_PATH = os.path.join(base_path, "data", jsonFileName)
+
+    if not os.path.exists(JSONDATA_PATH):
+        raise FileNotFoundError(f"파일을 찾을 수 없습니다: {JSONDATA_PATH}")
+
     with open(JSONDATA_PATH, "r", encoding="utf-8") as f:
         jsonData = json.load(f)
-    
+
     if rootKey is None:
         result = jsonData
     elif subKey is None:
-        result = jsonData[rootKey]
+        result = jsonData.get(rootKey, None)
     else:
-        result = jsonData[rootKey][subKey]
+        result = jsonData.get(rootKey, {}).get(subKey, None)
 
     return (result, JSONDATA_PATH) if needPath else result
 
-def toasterFunc(comments:str, duration:int=0, threaded:bool=True, iconPath:str=None):
+
+def toasterFunc(title:str, comment:str, duration:int=3, threaded:bool=True, iconPath:str=None):
     """toaster 함수
 
     Args:
@@ -254,8 +251,8 @@ def toasterFunc(comments:str, duration:int=0, threaded:bool=True, iconPath:str=N
     """
     
     toaster.show_toast(
-            "🐭Ratatouille :",
-            f"{comments}",
+            f"{title}",
+            f"{comment}",
             duration=duration,
             threaded=threaded,
             icon_path=iconPath
@@ -275,15 +272,15 @@ def loggingFunc(title:str, comment:str, level:str="info"):
     elif level == "debug":
         logging.debug("{:<25}: {}".format(title, comment))
 
-def pushNotification(message:str):
+def pushNotification(title:str, comment:str):
     """폰으로 알림 보내는 함수
 
     Args:
         message (str): 폰으로 보낼 메세지
     """
-    comments = f"🐭Ratatouille : {message}"
+    comments = f"{title}\n{comment}"
     requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
-    loggingFunc(title="pushNotification", comment="SUCCESE :)")
+    loggingFunc(title="pushNotification", comment="SUCCESE")
     
 def convert_timetable(timetable):
     """시간표 시간을 교시로 변환해주는 함수
@@ -312,7 +309,7 @@ def exitProgramFunc():
 
 def makeLogFolder(isTest=isTest):
     """로그 생성 함수
-
+    
     Args:
         isTest (bool, optional): 테스트 인자. Defaults to isTest.
     """
@@ -324,7 +321,7 @@ def makeLogFolder(isTest=isTest):
         loggingFunc(title="makeLogFolder", comment="TEST MODE")
     
     os.makedirs(log_folder, exist_ok=True)
-
+    
     log_file = os.path.join(log_folder, "app.log")
     
     logger = logging.getLogger()
@@ -340,4 +337,16 @@ def makeLogFolder(isTest=isTest):
         handlers=[handler]
     )
         
-    loggingFunc(title="makeLogFolder", comment="GOOD :)")
+    loggingFunc(title="makeLogFolder", comment="SUCCESS")
+
+def watchLogFunc(isTest:bool=isTest):
+    if isTest:
+        loggingFunc(title="isWeekday", comment="TEST MODE")
+        loggingFunc(title="todayVariable", comment="TEST MODE")
+        cmd = ["powershell", "-Command", "Get-Content logs/app.log -Wait"]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        try:
+            for line in process.stdout:
+                print(line, end="")
+        except KeyboardInterrupt:
+                process.terminate()

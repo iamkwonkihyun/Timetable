@@ -1,6 +1,6 @@
 # import library, package
 import threading
-from function.mainTray import mainTray
+from function.systemTray import systemTray
 from function.notificationFunc import notificationFunc
 from function.mainFunctions import programCheck, makeLogFolder
 
@@ -16,5 +16,5 @@ if __name__ == "__main__":
     timetableReminderFunc.start()
     
     # system tray 설정
-    app = mainTray()
+    app = systemTray()
     app.run()
