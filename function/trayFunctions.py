@@ -8,7 +8,7 @@ from function.mainFunctions import (
     loggingFunc
 )
 
-def makeTrayMenu(tray, icon:str, title:str, function, action):
+def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
     """트레이 생성 함수"""
     iconPath = assets_dir_func(icon)
     
@@ -60,9 +60,9 @@ def showProfile():
     root = tk.Tk()
     root.title("profile")
     root.geometry("1000x1000")
-    
+    root.mainloop()
 
-def saveTimetableFunc(entries, basicTimetable, allTimetablePath, allTimetable, tray, secondRoot):
+def saveTimetableFunc(entries, basicTimetable, allTimetablePath, allTimetable, tray, root):
     """시간표 저장 함수"""
     result = messagebox.askquestion("질문", "저장하시겠습니까?")
     if result == "yes":
@@ -85,33 +85,33 @@ def saveTimetableFunc(entries, basicTimetable, allTimetablePath, allTimetable, t
         else:
             messagebox.showinfo("timetable", "변경된 내용이 없습니다.")
 
-        secondRoot.destroy()
+        root.destroy()
 
 def setTimetableFunc(days, times, entries, basicTimetable, allTimetable, allTimetablePath, tray):
     """시간표 수정 창 띄우는 함수"""
-    second_root = tk.Tk()
-    second_root.title("시간표 편집")
-    second_root.geometry("1600x400")
+    root = tk.Tk()
+    root.title("시간표 편집")
+    root.geometry("1600x400")
 
-    tk.Label(second_root, text="요일", width=10, borderwidth=1, relief="solid").grid(row=0, column=0)
+    tk.Label(root, text="요일", width=10, borderwidth=1, relief="solid").grid(row=0, column=0)
 
     for i, day in enumerate(days):
-        tk.Label(second_root, text=day, width=20, borderwidth=1, relief="solid").grid(row=0, column=i+1)
+        tk.Label(root, text=day, width=20, borderwidth=1, relief="solid").grid(row=0, column=i+1)
 
     for j, time in enumerate(times):
-        tk.Label(second_root, text=time, width=10, borderwidth=1, relief="solid").grid(row=j+1, column=0)
+        tk.Label(root, text=time, width=10, borderwidth=1, relief="solid").grid(row=j+1, column=0)
 
         for i, day in enumerate(days):
             text = basicTimetable.get(day, {}).get(time, "")
-            entry = tk.Entry(second_root, width=20)
+            entry = tk.Entry(root, width=20)
             entry.insert(0, text)
             entry.grid(row=j+1, column=i+1)
-            entries.setdefault(day, {})[time] = entry  # 🔥 entries 초기화 수정
+            entries.setdefault(day, {})[time] = entry
 
     save_button = tk.Button(
-        second_root,
+        root,
         text="저장",
-        command=partial(saveTimetableFunc, entries, basicTimetable, allTimetablePath, allTimetable, tray, second_root)
+        command=partial(saveTimetableFunc, entries, basicTimetable, allTimetablePath, allTimetable, tray, root)
     )
     save_button.grid(row=len(times) + 1, column=0, columnspan=len(days) + 1, sticky="ew", pady=10)
 

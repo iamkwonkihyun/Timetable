@@ -7,7 +7,7 @@ from pathlib import Path
 toaster = ToastNotifier()
 
 # 테스트 변수
-isWeek, isTest = True, True 
+isWeek, isTest = True, False
 
 # global 변수
 yesterday = None
@@ -19,12 +19,17 @@ BASE_DIR = FUNCTION_DIR.parent
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 
-def programCheck(isTest:bool=isTest):
+def programRunningCheck(isTest:bool=isTest):
     """프로그램 실행 검사 함수
 
     Args:
         isTest (bool, optional): 테스트 인자. Defaults to isTest.
     """
+    checkTime = 0
+    programName = getJsonData(jsonFileName="etcData.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
+    
+    # 로그 생성 함수
+    makeLogFolder()
     
     if isTest == True:
         toasterFunc(
@@ -32,37 +37,79 @@ def programCheck(isTest:bool=isTest):
             comment="now, Test Mode",
         )
         pushNotification(title="This is Test Mode", comment="test mode")
-        loggingFunc(title="programCheck", comment="TEST MODE")
+        loggingFunc(title="programRunningCheck", comment="TEST MODE")
         
         log_thread = threading.Thread(target=watchLogFunc, args=(True,), daemon=True)
         log_thread.start()
         
         return True
-    else:
-        checkTime = 0
-        programName = getJsonData(jsonFileName="etcData.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
+    
+    if installRequirements():
         for program in programName:
-            loggingFunc(title="programCheck", comment="···")
+            loggingFunc(title="programRunningCheck", comment="···")
             wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
             service = wmi.ConnectServer(".", "root\\cimv2")
             process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
             if len(process_list) > 0:
                 toasterFunc(
-                    title="😀Hello!",
+                    title="😀 Hello!",
                     comment="Timetable is Running!\nNice to meet you :)",
                 )
-                pushNotification(title="😀Hello", comment="Timetable is Running! Nice to meet you")
-                loggingFunc(title="programCheck", comment="GOOD :)")
-                loggingFunc(title="program", comment="RUNNING")
+                pushNotification(title="😀 Hello", comment="Timetable is Running! Nice to meet you")
+                loggingFunc(title="programRunningCheck", comment="GOOD")
+                break
             else:
                 checkTime += 1
                 if checkTime == len(programName):
                     toasterFunc(
-                        title="🤯What?!",
+                        title="🤯 What?!",
                         comment="oh No.. bad news..\nsomething went wrong.. :(",
                     )
-                    loggingFunc(title="programCheck", comment="FAILED")
+                    pushNotification(title="🤯 What?!", comment="oh No.. bad news..\nsomething went wrong.. :(",)
+                    loggingFunc(title="programRunningCheck", comment="FAILED")
                     exitProgramFunc()
+
+def installRequirements():
+    req_file = "requirements.txt"
+    if os.path.exists(req_file):
+        toasterFunc(title="📦 필요한 패키지 설치 중...")
+        subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_file], check=True)
+        return True
+    else:
+        toasterFunc(title="⚠️ requirements.txt 파일이 없습니다.")
+        return False
+
+def makeLogFolder(isTest=isTest):
+    """로그 생성 함수
+
+    Args:
+        isTest (bool, optional): 테스트 인자. Defaults to isTest.
+    """
+    
+    log_folder = "logs"
+    
+    if isTest:
+        shutil.rmtree(log_folder, ignore_errors=True)
+        loggingFunc(title="makeLogFolder", comment="TEST MODE")
+    
+    os.makedirs(log_folder, exist_ok=True)
+    
+    log_file = os.path.join(log_folder, "app.log")
+    
+    logger = logging.getLogger()
+    logger.handlers.clear()
+    
+    handler = TimedRotatingFileHandler(
+        log_file, when="D", interval=1, backupCount=7, encoding="utf-8"
+    )
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[handler]
+    )
+        
+    loggingFunc(title="makeLogFolder", comment="SUCCESS")
 
 def notifyFunc(title:str, message:str, time:str, notifiedTimes:set):
     """알림 함수
@@ -100,7 +147,6 @@ def todayVariable(isTest:bool=isTest):
     nextTime = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
     
     return numToday, txtToday, nextTime
-
 
 def resetVariable(today:str):
     """하루가 지나면 특정 변수를 초기화 하는 함수
@@ -239,8 +285,7 @@ def getJsonData(jsonFileName: str, rootKey: str = None, subKey: str = None, need
 
     return (result, JSONDATA_PATH) if needPath else result
 
-
-def toasterFunc(title:str, comment:str, duration:int=3, threaded:bool=True, iconPath:str=None):
+def toasterFunc(title:str="", comment:str="", duration:int=3, threaded:bool=True, iconPath:str=None):
     """toaster 함수
 
     Args:
@@ -281,7 +326,7 @@ def pushNotification(title:str, comment:str):
     comments = f"{title}\n{comment}"
     requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
     loggingFunc(title="pushNotification", comment="SUCCESE")
-    
+
 def convert_timetable(timetable):
     """시간표 시간을 교시로 변환해주는 함수
 
@@ -306,38 +351,6 @@ def exitProgramFunc():
     loggingFunc(title="program", comment="OFF")
     logging.shutdown()
     sys.exit()
-
-def makeLogFolder(isTest=isTest):
-    """로그 생성 함수
-    
-    Args:
-        isTest (bool, optional): 테스트 인자. Defaults to isTest.
-    """
-    
-    log_folder = "logs"
-    
-    if isTest:
-        shutil.rmtree(log_folder, ignore_errors=True)
-        loggingFunc(title="makeLogFolder", comment="TEST MODE")
-    
-    os.makedirs(log_folder, exist_ok=True)
-    
-    log_file = os.path.join(log_folder, "app.log")
-    
-    logger = logging.getLogger()
-    logger.handlers.clear()
-    
-    handler = TimedRotatingFileHandler(
-        log_file, when="D", interval=1, backupCount=7, encoding="utf-8"
-    )
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        handlers=[handler]
-    )
-        
-    loggingFunc(title="makeLogFolder", comment="SUCCESS")
 
 def watchLogFunc(isTest:bool=isTest):
     if isTest:
