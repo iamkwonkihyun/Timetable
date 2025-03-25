@@ -6,7 +6,7 @@ from function.mainFunctions import (
 notifiedTimes = set()
 
 def notificationFunc():
-    allTimetable = getJsonData(jsonFileName="allTimetable.json")
+    allTimetable = getJsonData(jsonFileName="mainData.json")
     basicTimetable, breaktime = allTimetable["BASIC_TIMETABLE"], allTimetable["BREAKTIME"]
     while True:
         # 오늘 날짜, 요일, 시간 불러오기
@@ -24,13 +24,13 @@ def notificationFunc():
             if nextTime in basicTimetable[txtToday]:
                 notifyFunc(title=f"{txtToday} Class Notification",
                     message=f"Next Class: {basicTimetable[txtToday][nextTime]}",
-                    timeKey=nextTime,
+                    time=nextTime,
                     notifiedTimes=notifiedTimes)
             breakKey = "MWF" if isMWF(txtToday) else "TT"
             if nextTime in breaktime[breakKey]:
                 notifyFunc(title=f"{txtToday} Break Notification",
                     message=f"10 minutes left until the {breaktime[breakKey][nextTime]}",
-                    timeKey=nextTime,
+                    time=nextTime,
                     notifiedTimes=notifiedTimes)
             loggingFunc(title="weekdays", comment=f"{txtToday} KEEP RUNNING")
         else:
