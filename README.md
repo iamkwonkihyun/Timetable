@@ -7,9 +7,7 @@
 > ## How to Start?
 >
 > > -   레포지토리를 복제합니다<br/>
-> > -   폴더를 열고 cmd창을 열어서<br/> > > `pip install -r requirements.txt`<br/>
-> >     필요한 라이브러리들을 설치한다<br/>
-> > -   설치가 완료되었으면 폴더에 있는 main.pyw를 더블 클릭한다<br/>
+> > -   main.pyw를 더블클릭 합니다<br/>
 > > -   FINISH.<br/>
 >
 > ## How to get notifications on your phone
