@@ -1,10 +1,16 @@
-# import library, package
-import threading
-from function.systemTray import systemTray
-from function.notificationFunc import notificationFunc
-from function.mainFunctions import programRunningCheck
-
 if __name__ == "__main__":
+    
+    import os, subprocess, sys, threading
+    
+    req_file = "requirements.txt"
+    
+    if os.path.exists(req_file):
+        subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_file], check=True)
+        
+    from function.mainFunctions import programRunningCheck
+    from function.systemTray import systemTray
+    from function.notificationFunc import notificationFunc
+    
     # 프로그램 실행 체크
     programRunningCheck()
     

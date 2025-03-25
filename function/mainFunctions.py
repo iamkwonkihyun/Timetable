@@ -44,40 +44,29 @@ def programRunningCheck(isTest:bool=isTest):
         
         return True
     
-    if installRequirements():
-        for program in programName:
-            loggingFunc(title="programRunningCheck", comment="···")
-            wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
-            service = wmi.ConnectServer(".", "root\\cimv2")
-            process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
-            if len(process_list) > 0:
+    for program in programName:
+        loggingFunc(title="programRunningCheck", comment="···")
+        wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
+        service = wmi.ConnectServer(".", "root\\cimv2")
+        process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
+        if len(process_list) > 0:
+            toasterFunc(
+                title="😀 Hello!",
+                comment="Timetable is Running!\nNice to meet you :)",
+            )
+            pushNotification(title="😀 Hello", comment="Timetable is Running! Nice to meet you")
+            loggingFunc(title="programRunningCheck", comment="GOOD")
+            break
+        else:
+            checkTime += 1
+            if checkTime == len(programName):
                 toasterFunc(
-                    title="😀 Hello!",
-                    comment="Timetable is Running!\nNice to meet you :)",
+                    title="🤯 What?!",
+                    comment="oh No.. bad news..\nsomething went wrong.. :(",
                 )
-                pushNotification(title="😀 Hello", comment="Timetable is Running! Nice to meet you")
-                loggingFunc(title="programRunningCheck", comment="GOOD")
-                break
-            else:
-                checkTime += 1
-                if checkTime == len(programName):
-                    toasterFunc(
-                        title="🤯 What?!",
-                        comment="oh No.. bad news..\nsomething went wrong.. :(",
-                    )
-                    pushNotification(title="🤯 What?!", comment="oh No.. bad news..\nsomething went wrong.. :(",)
-                    loggingFunc(title="programRunningCheck", comment="FAILED")
-                    exitProgramFunc()
-
-def installRequirements():
-    req_file = "requirements.txt"
-    if os.path.exists(req_file):
-        toasterFunc(title="📦 필요한 패키지 설치 중...")
-        subprocess.run([sys.executable, "-m", "pip", "install", "-r", req_file], check=True)
-        return True
-    else:
-        toasterFunc(title="⚠️ requirements.txt 파일이 없습니다.")
-        return False
+                pushNotification(title="🤯 What?!", comment="oh No.. bad news..\nsomething went wrong.. :(",)
+                loggingFunc(title="programRunningCheck", comment="FAILED")
+                exitProgramFunc()
 
 def makeLogFolder(isTest=isTest):
     """로그 생성 함수
