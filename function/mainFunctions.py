@@ -19,6 +19,7 @@ BASE_DIR = FUNCTION_DIR.parent
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 
+# 프로그램 실행 검사 함수
 def programRunningCheck(isTest:bool=isTest):
     """프로그램 실행 검사 함수
 
@@ -28,8 +29,7 @@ def programRunningCheck(isTest:bool=isTest):
     checkTime = 0
     programName = getJsonData(jsonFileName="etcData.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
     
-    # 로그 생성 함수
-    makeLogFolder()
+    makeLogFolder() # 로그 생성 함수
     
     if isTest == True:
         toasterFunc(
@@ -39,7 +39,7 @@ def programRunningCheck(isTest:bool=isTest):
         pushNotification(title="This is Test Mode", comment="test mode")
         loggingFunc(title="programRunningCheck", comment="TEST MODE")
         
-        log_thread = threading.Thread(target=watchLogFunc, args=(True,), daemon=True)
+        log_thread = threading.Thread(target=watchLogFunc, args=(True), daemon=True)
         log_thread.start()
         
         return True
@@ -64,10 +64,11 @@ def programRunningCheck(isTest:bool=isTest):
                     title="🤯 What?!",
                     comment="oh No.. bad news..\nsomething went wrong.. :(",
                 )
-                pushNotification(title="🤯 What?!", comment="oh No.. bad news..\nsomething went wrong.. :(",)
+                pushNotification(title="🤯 What?!", comment="oh No.. bad news..\nsomething went wrong.. :(")
                 loggingFunc(title="programRunningCheck", comment="FAILED")
                 exitProgramFunc()
 
+# 로그 생성 함수
 def makeLogFolder(isTest=isTest):
     """로그 생성 함수
 
@@ -97,9 +98,10 @@ def makeLogFolder(isTest=isTest):
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[handler]
     )
-        
+    
     loggingFunc(title="makeLogFolder", comment="SUCCESS")
 
+# 알림 함수
 def notifyFunc(title:str, message:str, time:str, notifiedTimes:set):
     """알림 함수
 
@@ -116,6 +118,7 @@ def notifyFunc(title:str, message:str, time:str, notifiedTimes:set):
         loggingFunc(title="notified", comment=f"{title} | {time}")
         notifiedTimes.add(time)
 
+# 오늘 날짜, 요일, 시간을 반환하는 함수
 def todayVariable(isTest:bool=isTest):
     """오늘 날짜, 요일, 시간을 반환하는 함수
 
@@ -137,6 +140,7 @@ def todayVariable(isTest:bool=isTest):
     
     return numToday, txtToday, nextTime
 
+# 하루가 지나면 특정 변수를 초기화 하는 함수
 def resetVariable(today:str):
     """하루가 지나면 특정 변수를 초기화 하는 함수
 
@@ -159,6 +163,7 @@ def resetVariable(today:str):
     else:
         return False
 
+# 주말인지 주중인지 확인하는 함수
 def isWeekday(today:str, isTest:bool=isTest, isWeek:bool=isWeek):
     """오늘이 주말인지 주중인지 확인하는 함수
 
@@ -175,6 +180,7 @@ def isWeekday(today:str, isTest:bool=isTest, isWeek:bool=isWeek):
         return isWeek
     return today not in ["Saturday", "Sunday"]
 
+# 단축 수업 함수
 def isShortened(): 
     """단축 수업 함수
 
@@ -186,6 +192,7 @@ def isShortened():
     isActivated = not isActivated
     return isActivated
 
+# 월수금 확인 함수
 def isMWF(today:str):
     """오늘이 월수금 인지 확인해주는 함수
 
@@ -200,6 +207,7 @@ def isMWF(today:str):
     else:
         return False
 
+# 생일 확인 함수
 def isBirthday(today:str, oneNotified:set):
     """오늘이 생일인지 확인해주는 함수
 
@@ -216,6 +224,7 @@ def isBirthday(today:str, oneNotified:set):
         pushNotification(message="HAPPY BIRTHDAY TO YOU!!!\nToday is your birthday!!🎂")
         oneNotified.add(today)
 
+# assets 상대경로 반환 함수
 def assets_dir_func(fileName:str):
     """assets 상대경로 함수
 
@@ -228,6 +237,7 @@ def assets_dir_func(fileName:str):
     
     return str(ASSETS_DIR / fileName)
 
+# data 상대경로 반환 함수
 def data_dir_func(fileName:str):
     """data 상대경로 함수
 
@@ -239,6 +249,7 @@ def data_dir_func(fileName:str):
     """
     return str(DATA_DIR / fileName)
 
+# json 데이터 반환 함수
 def getJsonData(jsonFileName: str, rootKey: str = None, subKey: str = None, needPath: bool = False):
     """JSON 데이터를 반환하는 함수
 
@@ -274,6 +285,7 @@ def getJsonData(jsonFileName: str, rootKey: str = None, subKey: str = None, need
 
     return (result, JSONDATA_PATH) if needPath else result
 
+# toaster 함수
 def toasterFunc(title:str="", comment:str="", duration:int=3, threaded:bool=True, iconPath:str=None):
     """toaster 함수
 
@@ -292,6 +304,7 @@ def toasterFunc(title:str="", comment:str="", duration:int=3, threaded:bool=True
             icon_path=iconPath
         )
 
+# 로깅 함수
 def loggingFunc(title:str, comment:str, level:str="info"):
     """logging 함수
 
@@ -306,6 +319,7 @@ def loggingFunc(title:str, comment:str, level:str="info"):
     elif level == "debug":
         logging.debug("{:<25}: {}".format(title, comment))
 
+# 폰으로 알림 보내는 함수
 def pushNotification(title:str, comment:str):
     """폰으로 알림 보내는 함수
 
@@ -316,6 +330,7 @@ def pushNotification(title:str, comment:str):
     requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
     loggingFunc(title="pushNotification", comment="SUCCESE")
 
+# 시간표 시간을 교시로 반환하는 함수
 def convert_timetable(timetable):
     """시간표 시간을 교시로 변환해주는 함수
 
@@ -334,14 +349,20 @@ def convert_timetable(timetable):
     
     return converted
 
+# 프로그램 종료 함수
 def exitProgramFunc():
-    """프로그램 종료 함수
-    """
+    """프로그램 종료 함수"""
     loggingFunc(title="program", comment="OFF")
     logging.shutdown()
     sys.exit()
 
+# 실시간 로그 확인 함수
 def watchLogFunc(isTest:bool=isTest):
+    """실시간 로그 확인 함수
+
+    Args:
+        isTest (bool, optional): 테스트 인자. Defaults to isTest.
+    """
     if isTest:
         loggingFunc(title="isWeekday", comment="TEST MODE")
         loggingFunc(title="todayVariable", comment="TEST MODE")
