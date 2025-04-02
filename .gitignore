@@ -1,9 +1,7 @@
 __pycache__/
 *.pyc
 
+logs/
 *.log
 
-*.txt
-
-testData.json
 makeRelease.py
