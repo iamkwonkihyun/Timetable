@@ -36,13 +36,9 @@ def updateTooltip(tray, isShortened=False):
     tray.menuIcon.setToolTip(timetable_message)
     loggingFunc(title="updateTooltip", comment="SUCCESS")
 
-def showHansei():
-    """한세사이버보안고등학교 함수"""
-    toasterFunc(
-        title="한세사이버보안고등학교 교가 1절",
-        comment="유유히 흐르는 한강을\n가슴에 담고",
-    )
-    loggingFunc(title="showHansei", comment="SUCCESS")
+def setRefresh(tray):
+    updateTooltip(tray=tray)
+    loggingFunc(title="setRefresh", comment="SUCCESS")
 
 def setShortenedTimetableMode(tray):
     """단축 시간표 모드 알림"""

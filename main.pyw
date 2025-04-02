@@ -22,7 +22,7 @@ if __name__ == "__main__":
     programRunningCheck()
 
     # timetableReminderFunc 백그라운드에서 단독 실행
-    timetableReminderFunc = threading.Thread(target=notificationFunc, args=(), daemon=True)
+    timetableReminderFunc = threading.Thread(target=notificationFunc, daemon=True)
     timetableReminderFunc.start()
 
     # system tray 설정

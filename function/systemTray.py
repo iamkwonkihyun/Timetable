@@ -3,7 +3,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from function.mainFunctions import assets_dir_func, exitProgramFunc
 from function.trayFunctions import (
-    showHansei, updateTooltip, setShortenedTimetableMode, makeTrayMenu, showProfile, showSettingsWindow
+    setRefresh, updateTooltip, setShortenedTimetableMode, makeTrayMenu, showProfile, showSettingsWindow
 )
 
 class systemTray:
@@ -20,7 +20,7 @@ class systemTray:
         makeTrayMenu(self, "profile.ico", "profile", showProfile, "profile")
         
         # 한세사이버보안고등학교 트레이
-        makeTrayMenu(self, "hanseiLogo.ico", "HanseiCyberHighSchool", showHansei, "hansei")
+        makeTrayMenu(self, "refresh.ico", "refresh", lambda: setRefresh(self), "refresh")
         
         # 단축 수업 트레이
         makeTrayMenu(self, "time.ico", "Shortened_Timetable", lambda: setShortenedTimetableMode(self), "shortenedTimetable")
