@@ -1,5 +1,12 @@
+certifi==2025.1.31
+charset-normalizer==3.4.1
+idna==3.10
+pypiwin32==223
 PyQt5==5.15.11
+PyQt5-Qt5==5.15.2
 PyQt5_sip==12.17.0
 pywin32==307
-Requests==2.32.3
+requests==2.32.3
+setuptools==78.0.2
+urllib3==2.3.0
 win10toast==0.9
