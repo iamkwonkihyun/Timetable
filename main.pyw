@@ -14,10 +14,8 @@ if __name__ == "__main__":
             os.execl(sys.executable, sys.executable, *sys.argv)
             sys.exit()
     
-    from function.mainFunctions import programRunningCheck
+    from function.mainFunctions import programRunningCheck, notificationFunc
     from function.systemTray import systemTray
-    from function.notificationFunc import notificationFunc
-
     # 프로그램 실행 체크
     programRunningCheck()
 
