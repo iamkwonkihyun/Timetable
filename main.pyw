@@ -3,7 +3,6 @@ import sys
 import threading
 import subprocess
 
-
 if __name__ == "__main__":
     
     req_file = "requirements.txt"
@@ -18,10 +17,10 @@ if __name__ == "__main__":
             os.execl(sys.executable, sys.executable, *sys.argv)
             sys.exit()
     
-    from function.mainFunctions import programRunningCheck, notificationFunc
-    from function.systemTray import systemTray
+    from function.main_functions import program_running_check, notificationFunc
+    from function.system_tray import systemTray
     # 프로그램 실행 체크
-    programRunningCheck()
+    program_running_check()
 
     # timetableReminderFunc 백그라운드에서 단독 실행
     timetableReminderFunc = threading.Thread(target=notificationFunc, daemon=True)

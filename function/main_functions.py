@@ -9,20 +9,20 @@ import requests
 import threading
 import subprocess
 import win32com.client
-from logging.handlers import TimedRotatingFileHandler
-from win10toast import ToastNotifier
 from pathlib import Path
+from win10toast import ToastNotifier
+from logging.handlers import TimedRotatingFileHandler
 
 # 토스터 객체 생성
 toaster = ToastNotifier()
 
 # 테스트 변수
-isWeek, isTest = True, False
+is_weak, is_test = True, False
 
 # global 변수
-notifiedTimes = set()
+notified_times = set()
 yesterday = None
-isActivated = False
+is_activated = False
 
 # 상대경로
 FUNCTION_DIR = Path(__file__).resolve().parent
@@ -30,57 +30,59 @@ BASE_DIR = FUNCTION_DIR.parent
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 
+
 # 프로그램 실행 검사 함수
-def programRunningCheck(isTest:bool=isTest):
+def program_running_check(isTest:bool=is_test):
     """프로그램 실행 검사 함수
 
     Args:
         isTest (bool, optional): 테스트 인자. Defaults to isTest.
     """
-    checkTime = 0
-    programName = getJsonData(jsonFileName="etcData.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
+    check_time = 0
+    program_name = get_json_data(jsonFileName="etcData.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
     
-    makeLogFolder() # 로그 생성 함수
+    make_log_folder() # 로그 생성 함수
     
     if isTest == True:
-        toasterFunc(
+        toaster_func(
             title="isTest is True",
             comment="now, Test Mode",
         )
-        pushNotification(title="This is Test Mode", comment="test mode")
-        loggingFunc(title="programRunningCheck", comment="TEST MODE")
+        push_notification(title="This is Test Mode", comment="test mode")
+        logging_func(title="programRunningCheck", comment="TEST MODE")
         
         log_thread = threading.Thread(target=watchLogFunc, args=(True), daemon=True)
         log_thread.start()
         
         return True
     
-    for program in programName:
-        loggingFunc(title="programRunningCheck", comment="···")
+    for program in program_name:
+        logging_func(title="programRunningCheck", comment="···")
         wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
         service = wmi.ConnectServer(".", "root\\cimv2")
         process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
         if len(process_list) > 0:
-            toasterFunc(
+            toaster_func(
                 title="😀 Hello!",
                 comment="Timetable is Running!\nNice to meet you :)",
             )
-            pushNotification(title="😀 Hello", comment="Timetable is Running! Nice to meet you")
-            loggingFunc(title="programRunningCheck", comment="GOOD")
+            push_notification(title="😀 Hello", comment="Timetable is Running! Nice to meet you")
+            logging_func(title="programRunningCheck", comment="GOOD")
             break
         else:
-            checkTime += 1
-            if checkTime == len(programName):
-                toasterFunc(
+            check_time += 1
+            if check_time == len(program_name):
+                toaster_func(
                     title="🤯 What?!",
                     comment="oh No.. bad news..\nsomething went wrong.. :(",
                 )
-                pushNotification(title="🤯 What?!", comment="oh No.. bad news..\nsomething went wrong.. :(")
-                loggingFunc(title="programRunningCheck", comment="FAILED")
+                push_notification(title="🤯 What?!", comment="oh No.. bad news..\nsomething went wrong.. :(")
+                logging_func(title="programRunningCheck", comment="FAILED")
                 exitProgramFunc()
 
+
 # 로그 생성 함수
-def makeLogFolder(isTest=isTest):
+def make_log_folder(isTest=is_test):
     """로그 생성 함수
 
     Args:
@@ -91,7 +93,7 @@ def makeLogFolder(isTest=isTest):
     
     if isTest:
         shutil.rmtree(log_folder, ignore_errors=True)
-        loggingFunc(title="makeLogFolder", comment="TEST MODE")
+        logging_func(title="makeLogFolder", comment="TEST MODE")
     
     os.makedirs(log_folder, exist_ok=True)
     
@@ -110,10 +112,11 @@ def makeLogFolder(isTest=isTest):
         handlers=[handler]
     )
     
-    loggingFunc(title="makeLogFolder", comment="SUCCESS")
+    logging_func(title="makeLogFolder", comment="SUCCESS")
+
 
 # 알림 함수
-def notifyFunc(title:str, message:str, time:str, notifiedTimes:set):
+def notify_func(title:str, message:str, time:str, notifiedTimes:set):
     """알림 함수
 
     Args:
@@ -124,13 +127,14 @@ def notifyFunc(title:str, message:str, time:str, notifiedTimes:set):
     """
     
     if time not in notifiedTimes:
-        toasterFunc(title=title, comment=message)
-        pushNotification(title=title, comment=message)
-        loggingFunc(title="notified", comment=f"{title} | {time}")
+        toaster_func(title=title, comment=message)
+        push_notification(title=title, comment=message)
+        logging_func(title="notified", comment=f"{title} | {time}")
         notifiedTimes.add(time)
 
+
 # 오늘 날짜, 요일, 시간을 반환하는 함수
-def todayVariable(isTest:bool=isTest):
+def today_variable(isTest:bool=is_test):
     """오늘 날짜, 요일, 시간을 반환하는 함수
 
     Args:
@@ -145,14 +149,15 @@ def todayVariable(isTest:bool=isTest):
     if isTest:
         return "03-22", "Monday", "09:30"
 
-    numToday = today.strftime("%m-%d")
-    txtToday = today.strftime("%A")
-    nextTime = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
+    num_today = today.strftime("%m-%d")
+    txt_today = today.strftime("%A")
+    next_time = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
     
-    return numToday, txtToday, nextTime
+    return num_today, txt_today, next_time
+
 
 # 하루가 지나면 특정 변수를 초기화 하는 함수
-def resetVariable(today:str):
+def reset_variable(today:str):
     """하루가 지나면 특정 변수를 초기화 하는 함수
 
     Args:
@@ -174,8 +179,9 @@ def resetVariable(today:str):
     else:
         return False
 
+
 # 주말인지 주중인지 확인하는 함수
-def isWeekday(today:str, isTest:bool=isTest, isWeek:bool=isWeek):
+def is_weekday(today:str, isTest:bool=is_test, isWeek:bool=is_weak):
     """오늘이 주말인지 주중인지 확인하는 함수
 
     Args:
@@ -191,20 +197,22 @@ def isWeekday(today:str, isTest:bool=isTest, isWeek:bool=isWeek):
         return isWeek
     return today not in ["Saturday", "Sunday"]
 
+
 # 단축 수업 함수
-def isShortened(): 
+def is_shortened(): 
     """단축 수업 함수
 
     Returns:
         bool: !isActicated
     """
     
-    global isActivated
-    isActivated = not isActivated
-    return isActivated
+    global is_activated
+    is_activated = not is_activated
+    return is_activated
+
 
 # 월수금 확인 함수
-def isMWF(today:str):
+def is_mwf(today:str):
     """오늘이 월수금 인지 확인해주는 함수
 
     Args:
@@ -218,8 +226,9 @@ def isMWF(today:str):
     else:
         return False
 
+
 # 생일 확인 함수
-def isBirthday(today:str, oneNotified:set):
+def is_birthday(today:str, oneNotified:set):
     """오늘이 생일인지 확인해주는 함수
 
     Args:
@@ -227,13 +236,14 @@ def isBirthday(today:str, oneNotified:set):
         oneNotified (set): set 변수
     """
     
-    allUserData = getJsonData("etcData.json")
+    all_user_data = get_json_data("etcData.json")
     
-    if today == allUserData["USER_DATA"]["BIRTHDAY"] and today not in oneNotified:
-        loggingFunc(title="isBirthday",comment="HAPPY BIRTHDAY TO YOU!!!")
-        toasterFunc(title="HAPPY BIRTHDAY TO YOU!!!", comment="Today is your birthday!!🎂")
-        pushNotification(message="HAPPY BIRTHDAY TO YOU!!!\nToday is your birthday!!🎂")
+    if today == all_user_data["USER_DATA"]["BIRTHDAY"] and today not in oneNotified:
+        logging_func(title="isBirthday",comment="HAPPY BIRTHDAY TO YOU!!!")
+        toaster_func(title="HAPPY BIRTHDAY TO YOU!!!", comment="Today is your birthday!!🎂")
+        push_notification(message="HAPPY BIRTHDAY TO YOU!!!\nToday is your birthday!!🎂")
         oneNotified.add(today)
+
 
 # assets 상대경로 반환 함수
 def assets_dir_func(fileName:str):
@@ -248,6 +258,7 @@ def assets_dir_func(fileName:str):
     
     return str(ASSETS_DIR / fileName)
 
+
 # data 상대경로 반환 함수
 def data_dir_func(fileName:str):
     """data 상대경로 함수
@@ -260,8 +271,9 @@ def data_dir_func(fileName:str):
     """
     return str(DATA_DIR / fileName)
 
+
 # json 데이터 반환 함수
-def getJsonData(jsonFileName: str, rootKey: str = None, subKey: str = None, needPath: bool = False):
+def get_json_data(jsonFileName: str, rootKey: str = None, subKey: str = None, needPath: bool = False):
     """JSON 데이터를 반환하는 함수
 
     Args:
@@ -285,19 +297,20 @@ def getJsonData(jsonFileName: str, rootKey: str = None, subKey: str = None, need
         raise FileNotFoundError(f"파일을 찾을 수 없습니다: {JSONDATA_PATH}")
 
     with open(JSONDATA_PATH, "r", encoding="utf-8") as f:
-        jsonData = json.load(f)
+        json_data = json.load(f)
 
     if rootKey is None:
-        result = jsonData
+        result = json_data
     elif subKey is None:
-        result = jsonData.get(rootKey, None)
+        result = json_data.get(rootKey, None)
     else:
-        result = jsonData.get(rootKey, {}).get(subKey, None)
+        result = json_data.get(rootKey, {}).get(subKey, None)
 
     return (result, JSONDATA_PATH) if needPath else result
 
+
 # toaster 함수
-def toasterFunc(title:str="", comment:str="", duration:int=3, threaded:bool=True, iconPath:str=None):
+def toaster_func(title:str="", comment:str="", duration:int=3, threaded:bool=True, iconPath:str=None):
     """toaster 함수
 
     Args:
@@ -315,8 +328,9 @@ def toasterFunc(title:str="", comment:str="", duration:int=3, threaded:bool=True
             icon_path=iconPath
         )
 
+
 # 로깅 함수
-def loggingFunc(title:str, comment:str, level:str="info"):
+def logging_func(title:str, comment:str, level:str="info"):
     """logging 함수
 
     Args:
@@ -330,8 +344,9 @@ def loggingFunc(title:str, comment:str, level:str="info"):
     elif level == "debug":
         logging.debug("{:<25}: {}".format(title, comment))
 
+
 # 폰으로 알림 보내는 함수
-def pushNotification(title:str, comment:str):
+def push_notification(title:str, comment:str):
     """폰으로 알림 보내는 함수
 
     Args:
@@ -339,7 +354,8 @@ def pushNotification(title:str, comment:str):
     """
     comments = f"{title}\n{comment}"
     requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
-    loggingFunc(title="pushNotification", comment="SUCCESE")
+    logging_func(title="pushNotification", comment="SUCCESE")
+
 
 # 시간표 시간을 교시로 반환하는 함수
 def convert_timetable(timetable):
@@ -360,23 +376,25 @@ def convert_timetable(timetable):
     
     return converted
 
+
 # 프로그램 종료 함수
 def exitProgramFunc():
     """프로그램 종료 함수"""
-    loggingFunc(title="program", comment="OFF")
+    logging_func(title="program", comment="OFF")
     logging.shutdown()
     sys.exit()
 
+
 # 실시간 로그 확인 함수
-def watchLogFunc(isTest:bool=isTest):
+def watchLogFunc(isTest:bool=is_test):
     """실시간 로그 확인 함수
 
     Args:
         isTest (bool, optional): 테스트 인자. Defaults to isTest.
     """
     if isTest:
-        loggingFunc(title="isWeekday", comment="TEST MODE")
-        loggingFunc(title="todayVariable", comment="TEST MODE")
+        logging_func(title="isWeekday", comment="TEST MODE")
+        logging_func(title="todayVariable", comment="TEST MODE")
         cmd = ["powershell", "-Command", "Get-Content logs/app.log -Wait"]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         try:
@@ -385,35 +403,37 @@ def watchLogFunc(isTest:bool=isTest):
         except KeyboardInterrupt:
                 process.terminate()
 
+
+# 알림 함수
 def notificationFunc():
-    allTimetable = getJsonData(jsonFileName="mainData.json")
-    basicTimetable, breaktime = allTimetable["BASIC_TIMETABLE"], allTimetable["BREAKTIME"]
+    all_Timetable = get_json_data(jsonFileName="mainData.json")
+    basic_timetable, breaktime = all_Timetable["BASIC_TIMETABLE"], all_Timetable["BREAKTIME"]
     while True:
         # 오늘 날짜, 요일, 시간 불러오기
-        numToday, txtToday, nextTime = todayVariable()
+        num_today, txt_today, next_time = today_variable()
         
         # notifiedTime 변수 초기화 ( 하루가 지날때만 )
-        if resetVariable(txtToday):
-            notifiedTimes.clear()
+        if reset_variable(txt_today):
+            notified_times.clear()
         
         # 생일 확인 함수
-        isBirthday(numToday, notifiedTimes)
+        is_birthday(num_today, notified_times)
         
         # 주말 주중 확인 함수
-        if isWeekday(txtToday):
-            if nextTime in basicTimetable[txtToday]:
-                notifyFunc(title=f"{txtToday} Class Notification",
-                    message=f"Next Class: {basicTimetable[txtToday][nextTime]}",
-                    time=nextTime,
-                    notifiedTimes=notifiedTimes)
-            breakKey = "MWF" if isMWF(txtToday) else "TT"
-            if nextTime in breaktime[breakKey]:
-                notifyFunc(title=f"{txtToday} Break Notification",
-                    message=f"10 minutes left until the {breaktime[breakKey][nextTime]}",
-                    time=nextTime,
-                    notifiedTimes=notifiedTimes)
-            loggingFunc(title="weekdays", comment=f"{txtToday} KEEP RUNNING")
+        if is_weekday(txt_today):
+            if next_time in basic_timetable[txt_today]:
+                notify_func(title=f"{txt_today} Class Notification",
+                    message=f"Next Class: {basic_timetable[txt_today][next_time]}",
+                    time=next_time,
+                    notifiedTimes=notified_times)
+            breakKey = "MWF" if is_mwf(txt_today) else "TT"
+            if next_time in breaktime[breakKey]:
+                notify_func(title=f"{txt_today} Break Notification",
+                    message=f"10 minutes left until the {breaktime[breakKey][next_time]}",
+                    time=next_time,
+                    notifiedTimes=notified_times)
+            logging_func(title="weekdays", comment=f"{txt_today} KEEP RUNNING")
         else:
-            loggingFunc(title="weekends", comment=f"{txtToday} KEEP RUNNING")
+            logging_func(title="weekends", comment=f"{txt_today} KEEP RUNNING")
         
         time.sleep(1)

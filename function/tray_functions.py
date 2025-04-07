@@ -3,9 +3,9 @@ from functools import partial
 from tkinter import messagebox
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
-from function.mainFunctions import (
-    assets_dir_func, todayVariable, isMWF, isShortened, getJsonData, convert_timetable, exitProgramFunc, toasterFunc,
-    loggingFunc
+from function.main_functions import (
+    assets_dir_func, today_variable, is_mwf, is_shortened, get_json_data, convert_timetable, exitProgramFunc, toaster_func,
+    logging_func
 )
 
 def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
@@ -18,38 +18,38 @@ def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
     tray_action.triggered.connect(function)
     tray.menu.addAction(tray_action)
     
-    loggingFunc(title=f"make{title}", comment="SUCCESS")
+    logging_func(title=f"make{title}", comment="SUCCESS")
 
 def updateTooltip(tray, isShortened=False):
     """트레이 아이콘의 툴팁 업데이트"""
-    allTimetable = getJsonData(jsonFileName="mainData.json")
+    allTimetable = get_json_data(jsonFileName="mainData.json")
     basicTimetable = convert_timetable(allTimetable["BASIC_TIMETABLE"])
     shortenedTimetable = allTimetable["SHORTENED_TIMETABLE"]
-    _, txt_today, _ = todayVariable()
+    _, txt_today, _ = today_variable()
 
     today_schedule = (
-        shortenedTimetable.get("MWF" if isMWF(today=txt_today) else "TT", {})
+        shortenedTimetable.get("MWF" if is_mwf(today=txt_today) else "TT", {})
         if isShortened else basicTimetable.get(txt_today, {})
     )
 
     timetable_message = "\n".join([f"{time}: {task}" for time, task in today_schedule.items()]) or "No schedule available"
     tray.menuIcon.setToolTip(timetable_message)
-    loggingFunc(title="updateTooltip", comment="SUCCESS")
+    logging_func(title="updateTooltip", comment="SUCCESS")
 
 def setRefresh(tray):
     updateTooltip(tray=tray)
-    loggingFunc(title="setRefresh", comment="SUCCESS")
+    logging_func(title="setRefresh", comment="SUCCESS")
 
 def setShortenedTimetableMode(tray):
     """단축 시간표 모드 알림"""
-    isActivated = isShortened()
+    isActivated = is_shortened()
     comment = "Activated" if isActivated else "Deactivated"
     updateTooltip(tray, isShortened=isActivated)
-    toasterFunc(
+    toaster_func(
         title="shortened timetable",
         comment=f"Shortened Timetable Mode is {comment}"
     )
-    loggingFunc(title="setShortenedTimetableMode", comment=comment)
+    logging_func(title="setShortenedTimetableMode", comment=comment)
 
 def showProfile():
     """프로필 설정 함수"""
@@ -115,7 +115,7 @@ def showSettingsWindow(tray):
     """settings tray 함수"""
     entries = {}
 
-    allTimetable, allTimetablePath = getJsonData(jsonFileName="mainData.json", needPath=True)
+    allTimetable, allTimetablePath = get_json_data(jsonFileName="mainData.json", needPath=True)
     basicTimetable = allTimetable["BASIC_TIMETABLE"]
 
     # 창 띄우기
