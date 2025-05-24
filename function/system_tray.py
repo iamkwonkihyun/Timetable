@@ -19,9 +19,6 @@ class systemTray:
         # 프로필 트레이
         makeTrayMenu(self, "profile.ico", "profile", showProfile, "profile")
         
-        # 한세사이버보안고등학교 트레이
-        makeTrayMenu(self, "refresh.ico", "refresh", lambda: setRefresh(self), "refresh")
-        
         # 단축 수업 트레이
         makeTrayMenu(self, "time.ico", "Shortened_Timetable", lambda: setShortenedTimetableMode(self), "shortenedTimetable")
         
@@ -34,6 +31,8 @@ class systemTray:
         self.menuIcon.setContextMenu(self.menu)
         updateTooltip(self)
         self.menuIcon.show()
+        
+        setRefresh(self)
 
     def run(self):
         if self.app.exec_() == 0:

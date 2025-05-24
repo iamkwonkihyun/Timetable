@@ -157,8 +157,8 @@ def today_variable(isTest:bool=is_test):
 
 
 # 하루가 지나면 특정 변수를 초기화 하는 함수
-def reset_variable(today:str):
-    """하루가 지나면 특정 변수를 초기화 하는 함수
+def reset_function(today:str):
+    """하루가 지나면 모든 상태를 초기화 하는 함수
 
     Args:
         today (str): 오늘 날짜
@@ -408,32 +408,32 @@ def watchLogFunc(isTest:bool=is_test):
 def notificationFunc():
     all_Timetable = get_json_data(jsonFileName="mainData.json")
     basic_timetable, breaktime = all_Timetable["BASIC_TIMETABLE"], all_Timetable["BREAKTIME"]
+    
     while True:
         # 오늘 날짜, 요일, 시간 불러오기
         num_today, txt_today, next_time = today_variable()
         
         # notifiedTime 변수 초기화 ( 하루가 지날때만 )
-        if reset_variable(txt_today):
+        if reset_function(txt_today):
             notified_times.clear()
-        
-        # 생일 확인 함수
-        is_birthday(num_today, notified_times)
-        
-        # 주말 주중 확인 함수
-        if is_weekday(txt_today):
-            if next_time in basic_timetable[txt_today]:
-                notify_func(title=f"{txt_today} Class Notification",
-                    message=f"Next Class: {basic_timetable[txt_today][next_time]}",
-                    time=next_time,
-                    notifiedTimes=notified_times)
-            breakKey = "MWF" if is_mwf(txt_today) else "TT"
-            if next_time in breaktime[breakKey]:
-                notify_func(title=f"{txt_today} Break Notification",
-                    message=f"10 minutes left until the {breaktime[breakKey][next_time]}",
-                    time=next_time,
-                    notifiedTimes=notified_times)
-            logging_func(title="weekdays", comment=f"{txt_today} KEEP RUNNING")
-        else:
-            logging_func(title="weekends", comment=f"{txt_today} KEEP RUNNING")
-        
-        time.sleep(1)
+            # 생일 확인 함수
+            is_birthday(num_today, notified_times)
+            
+            # 주말 주중 확인 함수
+            if is_weekday(txt_today):
+                if next_time in basic_timetable[txt_today]:
+                    notify_func(title=f"{txt_today} Class Notification",
+                        message=f"Next Class: {basic_timetable[txt_today][next_time]}",
+                        time=next_time,
+                        notifiedTimes=notified_times)
+                breakKey = "MWF" if is_mwf(txt_today) else "TT"
+                if next_time in breaktime[breakKey]:
+                    notify_func(title=f"{txt_today} Break Notification",
+                        message=f"10 minutes left until the {breaktime[breakKey][next_time]}",
+                        time=next_time,
+                        notifiedTimes=notified_times)
+                logging_func(title="weekdays", comment=f"{txt_today} KEEP RUNNING")
+            else:
+                logging_func(title="weekends", comment=f"{txt_today} KEEP RUNNING")
+            
+            time.sleep(1)

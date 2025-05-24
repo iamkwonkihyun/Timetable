@@ -1,4 +1,5 @@
 import json, tkinter as tk
+from PyQt5.QtCore import QTimer
 from functools import partial
 from tkinter import messagebox
 from PyQt5.QtGui import QIcon
@@ -37,8 +38,9 @@ def updateTooltip(tray, isShortened=False):
     logging_func(title="updateTooltip", comment="SUCCESS")
 
 def setRefresh(tray):
-    updateTooltip(tray=tray)
-    logging_func(title="setRefresh", comment="SUCCESS")
+    tray.refreshTimer = QTimer()
+    tray.refreshTimer.timeout.connect(lambda: updateTooltip(tray=tray))
+    tray.refreshTimer.start(10 * 1000)  # 10초
 
 def setShortenedTimetableMode(tray):
     """단축 시간표 모드 알림"""

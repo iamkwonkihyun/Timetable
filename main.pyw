@@ -1,9 +1,8 @@
-import os
-import sys
-import threading
-import subprocess
-
 if __name__ == "__main__":
+    import os
+    import sys
+    import threading
+    import subprocess
     
     req_file = "requirements.txt"
     
@@ -19,6 +18,7 @@ if __name__ == "__main__":
     
     from function.main_functions import program_running_check, notificationFunc
     from function.system_tray import systemTray
+
     # 프로그램 실행 체크
     program_running_check()
 
