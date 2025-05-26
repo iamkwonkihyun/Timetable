@@ -29,7 +29,7 @@ class systemTray:
         makeTrayMenu(self, "time_icon.ico", "Shortened_Timetable", lambda: setShortenedTimetableMode(self), "shortenedTimetable")
         
         # 세팅 트레이
-        makeTrayMenu(self, "settings_icon.ico", "Settings", lambda: showSettingsWindow(self), "settings")
+        makeTrayMenu(self, "setting_icon.ico", "Settings", lambda: showSettingsWindow(self), "settings")
         
         # 프로그램 종료 트레이
         makeTrayMenu(self, "exit_icon.ico", "Exit", exitProgramFunc, "exit")
