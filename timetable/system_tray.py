@@ -1,8 +1,8 @@
 import sys
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
-from function.main_functions import assets_dir_func, exitProgramFunc
-from function.tray_functions import (
+from timetable.main_functions import assets_dir_func, exitProgramFunc
+from timetable.tray_functions import (
     setRefresh, updateTooltip, setShortenedTimetableMode, makeTrayMenu, showProfile, showSettingsWindow
 )
 

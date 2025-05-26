@@ -4,7 +4,7 @@ from functools import partial
 from tkinter import messagebox
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
-from function.main_functions import (
+from timetable.main_functions import (
     assets_dir_func, today_variable, is_mwf, is_shortened, get_json_data, convert_timetable, exitProgramFunc, toaster_func,
     logging_func
 )
@@ -23,7 +23,7 @@ def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
 
 def updateTooltip(tray, isShortened=False):
     """트레이 아이콘의 툴팁 업데이트"""
-    allTimetable = get_json_data(jsonFileName="mainData.json")
+    allTimetable = get_json_data(jsonFileName="main_data.json")
     basicTimetable = convert_timetable(allTimetable["BASIC_TIMETABLE"])
     shortenedTimetable = allTimetable["SHORTENED_TIMETABLE"]
     _, txt_today, _ = today_variable()
@@ -117,7 +117,7 @@ def showSettingsWindow(tray):
     """settings tray 함수"""
     entries = {}
 
-    allTimetable, allTimetablePath = get_json_data(jsonFileName="mainData.json", needPath=True)
+    allTimetable, allTimetablePath = get_json_data(jsonFileName=".json", needPath=True)
     basicTimetable = allTimetable["BASIC_TIMETABLE"]
 
     # 창 띄우기

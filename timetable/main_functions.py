@@ -39,7 +39,7 @@ def program_running_check(isTest:bool=is_test):
         isTest (bool, optional): 테스트 인자. Defaults to isTest.
     """
     check_time = 0
-    program_name = get_json_data(jsonFileName="etcData.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
+    program_name = get_json_data(jsonFileName="etc_data.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
     
     make_log_folder() # 로그 생성 함수
     
@@ -236,7 +236,7 @@ def is_birthday(today:str, oneNotified:set):
         oneNotified (set): set 변수
     """
     
-    all_user_data = get_json_data("etcData.json")
+    all_user_data = get_json_data("etc_data.json")
     
     if today == all_user_data["USER_DATA"]["BIRTHDAY"] and today not in oneNotified:
         logging_func(title="isBirthday",comment="HAPPY BIRTHDAY TO YOU!!!")
@@ -406,7 +406,7 @@ def watchLogFunc(isTest:bool=is_test):
 
 # 알림 함수
 def notificationFunc():
-    all_Timetable = get_json_data(jsonFileName="mainData.json")
+    all_Timetable = get_json_data(jsonFileName="main_data.json")
     basic_timetable, breaktime = all_Timetable["BASIC_TIMETABLE"], all_Timetable["BREAKTIME"]
     
     while True:
