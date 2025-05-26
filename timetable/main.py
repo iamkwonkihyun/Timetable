@@ -3,7 +3,7 @@ def main():
     import sys
     import subprocess
     import threading
-    from timetable.main_functions import program_running_check, notificationFunc
+    from timetable.functions import program_running_check, notificationFunc
     from timetable.system_tray import systemTray
     
     req_file = "requirements.txt"
