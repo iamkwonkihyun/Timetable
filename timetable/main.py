@@ -3,7 +3,7 @@ def main():
     import sys
     import subprocess
     import threading
-    from timetable.functions import program_running_check, notificationFunc
+    from timetable.functions import program_running_check, notification_func
     from timetable.system_tray import systemTray
     
     req_file = "requirements.txt"
@@ -19,12 +19,12 @@ def main():
             sys.exit()
     
     # 프로그램 실행 체크
-    program_running_check()
-    
-    # timetableReminderFunc 백그라운드에서 단독 실행
-    timetableReminderFunc = threading.Thread(target=notificationFunc, daemon=True)
-    timetableReminderFunc.start()
-    
-    # system tray 설정
-    app = systemTray()
-    app.run()
+    if program_running_check():
+        
+        # timetableReminderFunc 백그라운드에서 단독 실행
+        timetableReminderFunc = threading.Thread(target=notification_func, daemon=True)
+        timetableReminderFunc.start()
+        
+        # system tray 설정
+        app = systemTray()
+        app.run()

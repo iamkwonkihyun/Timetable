@@ -3,13 +3,13 @@ import json
 import tkinter as tk
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
-from timetable.functions import assets_dir_func, exitProgramFunc
+from timetable.functions import assets_dir_func, exit_program_func
 from PyQt5.QtCore import QTimer
 from functools import partial
 from tkinter import messagebox
 from timetable.functions import (
-    assets_dir_func, today_variable, is_mwf, is_shortened, get_json_data, convert_timetable,
-    exitProgramFunc, toaster_func, logging_func
+    assets_dir_func, today_variable, is_mwf, is_shortened, get_json_data,
+    exit_program_func, toaster_func, logging_func
 )
 
 class systemTray:
@@ -32,7 +32,7 @@ class systemTray:
         makeTrayMenu(self, "setting_icon.ico", "Settings", lambda: showSettingsWindow(self), "settings")
         
         # 프로그램 종료 트레이
-        makeTrayMenu(self, "exit_icon.ico", "Exit", exitProgramFunc, "exit")
+        makeTrayMenu(self, "exit_icon.ico", "Exit", exit_program_func, "exit")
 
         self.menuIcon.setContextMenu(self.menu)
         updateTooltip(self)
@@ -42,7 +42,7 @@ class systemTray:
 
     def run(self):
         if self.app.exec_() == 0:
-            exitProgramFunc()
+            exit_program_func()
 
 def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
     """트레이 생성 함수"""
@@ -58,14 +58,20 @@ def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
 
 def updateTooltip(tray, isShortened=False):
     """트레이 아이콘의 툴팁 업데이트"""
-    allTimetable = get_json_data(jsonFileName="main_data.json")
-    basicTimetable = convert_timetable(allTimetable["BASIC_TIMETABLE"])
+    allTimetable = get_json_data(json_file_name="timetable.json")
+    converted_timetable = {}
+    
+    for day, schedule in allTimetable["BASIC_TIMETABLE"].items():
+        sorted_times = sorted(schedule.keys())  # 시간을 순서대로 정렬
+        converted_schedule = {f"{i+1}교시": schedule[time] for i, time in enumerate(sorted_times)}
+        converted_timetable[day] = converted_schedule
+        
     shortenedTimetable = allTimetable["SHORTENED_TIMETABLE"]
     _, txt_today, _ = today_variable()
 
     today_schedule = (
         shortenedTimetable.get("MWF" if is_mwf(today=txt_today) else "TT", {})
-        if isShortened else basicTimetable.get(txt_today, {})
+        if isShortened else converted_timetable.get(txt_today, {})
     )
 
     timetable_message = "\n".join([f"{time}: {task}" for time, task in today_schedule.items()]) or "No schedule available"
@@ -152,7 +158,7 @@ def showSettingsWindow(tray):
     """settings tray 함수"""
     entries = {}
 
-    allTimetable, allTimetablePath = get_json_data(jsonFileName="main_data.json", needPath=True)
+    allTimetable, allTimetablePath = get_json_data(json_file_name="timetable.json", need_path=True)
     basicTimetable = allTimetable["BASIC_TIMETABLE"]
 
     # 창 띄우기
@@ -172,7 +178,7 @@ def showSettingsWindow(tray):
         width=35)
     edit_button.grid(row=1, column=0, columnspan=2, sticky="ew", pady=10)
 
-    exit_button = tk.Button(root, text="종료", command=exitProgramFunc)
+    exit_button = tk.Button(root, text="종료", command=exit_program_func)
     exit_button.grid(row=2, column=0, columnspan=2, sticky="ew", pady=10)
 
     root.mainloop()

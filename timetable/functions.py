@@ -17,7 +17,7 @@ from logging.handlers import TimedRotatingFileHandler
 toaster = ToastNotifier()
 
 # 테스트 변수
-is_weak, is_test = True, False
+is_weak, is_test = True, True
 
 # global 변수
 notified_times = set()
@@ -32,68 +32,19 @@ DATA_DIR = BASE_DIR / "data"
 
 
 # 프로그램 실행 검사 함수
-def program_running_check(isTest:bool=is_test):
-    """프로그램 실행 검사 함수
+def program_running_check(test: bool = is_test):
+    """프로그램 실행 검사 및 로그 폴더 생성 함수
 
     Args:
-        isTest (bool, optional): 테스트 인자. Defaults to isTest.
+        isTest (bool, optional): 테스트 인자.
+
+    Returns:
+        bool: 테스트 중이거나 program이 실행중이면 True를 반환
     """
+    
     check_time = 0
-    program_name = get_json_data(jsonFileName="etc_data.json", rootKey="PROGRAM_DATA", subKey="PROGRAM_NAME")
-    
-    make_log_folder() # 로그 생성 함수
-    
-    if isTest == True:
-        toaster_func(
-            title="isTest is True",
-            comment="now, Test Mode",
-        )
-        push_notification(title="This is Test Mode", comment="test mode")
-        logging_func(title="programRunningCheck", comment="TEST MODE")
-        
-        log_thread = threading.Thread(target=watchLogFunc, args=(True), daemon=True)
-        log_thread.start()
-        
-        return True
-    
-    for program in program_name:
-        logging_func(title="programRunningCheck", comment="···")
-        wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
-        service = wmi.ConnectServer(".", "root\\cimv2")
-        process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
-        if len(process_list) > 0:
-            toaster_func(
-                title="😀 Hello!",
-                comment="Timetable is Running!\nNice to meet you :)",
-            )
-            push_notification(title="😀 Hello", comment="Timetable is Running! Nice to meet you")
-            logging_func(title="programRunningCheck", comment="GOOD")
-            break
-        else:
-            check_time += 1
-            if check_time == len(program_name):
-                toaster_func(
-                    title="🤯 What?!",
-                    comment="oh No.. bad news..\nsomething went wrong.. :(",
-                )
-                push_notification(title="🤯 What?!", comment="oh No.. bad news..\nsomething went wrong.. :(")
-                logging_func(title="programRunningCheck", comment="FAILED")
-                exitProgramFunc()
-
-
-# 로그 생성 함수
-def make_log_folder(isTest=is_test):
-    """로그 생성 함수
-
-    Args:
-        isTest (bool, optional): 테스트 인자. Defaults to isTest.
-    """
-    
     log_folder = "logs"
-    
-    if isTest:
-        shutil.rmtree(log_folder, ignore_errors=True)
-        logging_func(title="makeLogFolder", comment="TEST MODE")
+    program_name = get_json_data(json_file_name="etc_data.json", root_key="PROGRAM_DATA", sub_key="PROGRAM_NAME")
     
     os.makedirs(log_folder, exist_ok=True)
     
@@ -112,11 +63,49 @@ def make_log_folder(isTest=is_test):
         handlers=[handler]
     )
     
-    logging_func(title="makeLogFolder", comment="SUCCESS")
+    if test:
+        toaster_func(
+            title="isTest is True",
+            comment="now, Test Mode",
+        )
+        
+        log_thread = threading.Thread(target=watch_log_func, args=(True), daemon=True)
+        log_thread.start()
+        
+        shutil.rmtree(log_folder, ignore_errors=True)
+        
+        return True
+    
+    for program in program_name:
+        
+        wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
+        service = wmi.ConnectServer(".", "root\\cimv2")
+        process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
+        
+        logging_func(title="programRunningCheck", comment="···")
+        
+        if len(process_list) > 0:
+            toaster_func(
+                title="😀 Hello!",
+                comment="Timetable is Running!\nNice to meet you :)",
+            )
+            push_notification(title="😀 Hello", comment="Timetable is Running! Nice to meet you")
+            logging_func(title="programRunningCheck", comment="GOOD")
+            return True
+        else:
+            check_time += 1
+            if check_time == len(program_name):
+                toaster_func(
+                    title="🤯 What?!",
+                    comment="oh No.. bad news..\nsomething went wrong.. :(",
+                )
+                push_notification(title="🤯 What?!", comment="oh No.. bad news..\nsomething went wrong.. :(")
+                logging_func(title="programRunningCheck", comment="FAILED")
+                exit_program_func()
 
 
 # 알림 함수
-def notify_func(title:str, message:str, time:str, notifiedTimes:set):
+def notify_func(title: str, message: str, time: str, notified_times: set):
     """알림 함수
 
     Args:
@@ -126,15 +115,15 @@ def notify_func(title:str, message:str, time:str, notifiedTimes:set):
         notifiedTimes (set): notifiedTimes 변수
     """
     
-    if time not in notifiedTimes:
+    if time not in notified_times:
         toaster_func(title=title, comment=message)
         push_notification(title=title, comment=message)
         logging_func(title="notified", comment=f"{title} | {time}")
-        notifiedTimes.add(time)
+        notified_times.add(time)
 
 
 # 오늘 날짜, 요일, 시간을 반환하는 함수
-def today_variable(isTest:bool=is_test):
+def today_variable(test: bool = is_test):
     """오늘 날짜, 요일, 시간을 반환하는 함수
 
     Args:
@@ -146,7 +135,7 @@ def today_variable(isTest:bool=is_test):
     
     today = datetime.datetime.today()
     
-    if isTest:
+    if test:
         return "03-22", "Monday", "09:30"
 
     num_today = today.strftime("%m-%d")
@@ -181,7 +170,7 @@ def reset_function(today:str):
 
 
 # 주말인지 주중인지 확인하는 함수
-def is_weekday(today:str, isTest:bool=is_test, isWeek:bool=is_weak):
+def is_weekday(today: str, test: bool = is_test, is_week: bool = is_weak):
     """오늘이 주말인지 주중인지 확인하는 함수
 
     Args:
@@ -190,11 +179,11 @@ def is_weekday(today:str, isTest:bool=is_test, isWeek:bool=is_weak):
         isWeek (bool, optional): 테스트 인자 주말 주중 선택. Defaults to isWeek.
 
     Returns:
-        bool: 주말이면 True를 주말이면 False를 반환
+        bool: 주말이면 True를 주말이 아니면 False를 반환
     """
 
-    if isTest:
-        return isWeek
+    if test:
+        return is_week
     return today not in ["Saturday", "Sunday"]
 
 
@@ -203,7 +192,7 @@ def is_shortened():
     """단축 수업 함수
 
     Returns:
-        bool: !isActicated
+        bool: !is_acticated
     """
     
     global is_activated
@@ -212,7 +201,7 @@ def is_shortened():
 
 
 # 월수금 확인 함수
-def is_mwf(today:str):
+def is_mwf(today: str):
     """오늘이 월수금 인지 확인해주는 함수
 
     Args:
@@ -228,25 +217,25 @@ def is_mwf(today:str):
 
 
 # 생일 확인 함수
-def is_birthday(today:str, oneNotified:set):
+def is_birthday(today: str, one_notified: set):
     """오늘이 생일인지 확인해주는 함수
 
     Args:
         today (str): 오늘 날짜
-        oneNotified (set): set 변수
+        one_notified (set): set 변수
     """
     
     all_user_data = get_json_data("etc_data.json")
     
-    if today == all_user_data["USER_DATA"]["BIRTHDAY"] and today not in oneNotified:
+    if today == all_user_data["USER_DATA"]["BIRTHDAY"] and today not in one_notified:
         logging_func(title="isBirthday",comment="HAPPY BIRTHDAY TO YOU!!!")
         toaster_func(title="HAPPY BIRTHDAY TO YOU!!!", comment="Today is your birthday!!🎂")
         push_notification(message="HAPPY BIRTHDAY TO YOU!!!\nToday is your birthday!!🎂")
-        oneNotified.add(today)
+        one_notified.add(today)
 
 
 # assets 상대경로 반환 함수
-def assets_dir_func(fileName:str):
+def assets_dir_func(file_name:str):
     """assets 상대경로 함수
 
     Args:
@@ -256,11 +245,11 @@ def assets_dir_func(fileName:str):
         str: 파일까지의 상대경로를 str로 반환
     """
     
-    return str(ASSETS_DIR / fileName)
+    return str(ASSETS_DIR / file_name)
 
 
 # data 상대경로 반환 함수
-def data_dir_func(fileName:str):
+def data_dir_func(file_name:str):
     """data 상대경로 함수
 
     Args:
@@ -269,11 +258,11 @@ def data_dir_func(fileName:str):
     Returns:
         str: 파일까지의 상대경로를 str로 반환
     """
-    return str(DATA_DIR / fileName)
+    return str(DATA_DIR / file_name)
 
 
 # json 데이터 반환 함수
-def get_json_data(jsonFileName: str, rootKey: str = None, subKey: str = None, needPath: bool = False):
+def get_json_data(json_file_name: str, root_key: str = None, sub_key: str = None, need_path: bool = False):
     """JSON 데이터를 반환하는 함수
 
     Args:
@@ -291,26 +280,26 @@ def get_json_data(jsonFileName: str, rootKey: str = None, subKey: str = None, ne
     else:
         base_path = os.path.abspath(".")
 
-    JSONDATA_PATH = os.path.join(base_path, "data", jsonFileName)
+    JSON_DATA_PATH = os.path.join(base_path, "data", json_file_name)
 
-    if not os.path.exists(JSONDATA_PATH):
-        raise FileNotFoundError(f"파일을 찾을 수 없습니다: {JSONDATA_PATH}")
+    if not os.path.exists(JSON_DATA_PATH):
+        raise FileNotFoundError(f"파일을 찾을 수 없습니다: {JSON_DATA_PATH}")
 
-    with open(JSONDATA_PATH, "r", encoding="utf-8") as f:
+    with open(JSON_DATA_PATH, "r", encoding="utf-8") as f:
         json_data = json.load(f)
 
-    if rootKey is None:
+    if root_key is None:
         result = json_data
-    elif subKey is None:
-        result = json_data.get(rootKey, None)
+    elif sub_key is None:
+        result = json_data.get(root_key, None)
     else:
-        result = json_data.get(rootKey, {}).get(subKey, None)
+        result = json_data.get(root_key, {}).get(sub_key, None)
 
-    return (result, JSONDATA_PATH) if needPath else result
+    return (result, JSON_DATA_PATH) if need_path else result
 
 
 # toaster 함수
-def toaster_func(title:str="", comment:str="", duration:int=3, threaded:bool=True, iconPath:str=None):
+def toaster_func(title: str, comment: str, duration: int = 3, threaded: bool = True, iconPath: str = None):
     """toaster 함수
 
     Args:
@@ -330,7 +319,7 @@ def toaster_func(title:str="", comment:str="", duration:int=3, threaded:bool=Tru
 
 
 # 로깅 함수
-def logging_func(title:str, comment:str, level:str="info"):
+def logging_func(title: str, comment: str, level: str = "info"):
     """logging 함수
 
     Args:
@@ -346,7 +335,7 @@ def logging_func(title:str, comment:str, level:str="info"):
 
 
 # 폰으로 알림 보내는 함수
-def push_notification(title:str, comment:str):
+def push_notification(title: str, comment: str):
     """폰으로 알림 보내는 함수
 
     Args:
@@ -378,7 +367,7 @@ def convert_timetable(timetable):
 
 
 # 프로그램 종료 함수
-def exitProgramFunc():
+def exit_program_func():
     """프로그램 종료 함수"""
     logging_func(title="program", comment="OFF")
     logging.shutdown()
@@ -386,7 +375,7 @@ def exitProgramFunc():
 
 
 # 실시간 로그 확인 함수
-def watchLogFunc(isTest:bool=is_test):
+def watch_log_func(isTest:bool=is_test):
     """실시간 로그 확인 함수
 
     Args:
@@ -405,8 +394,8 @@ def watchLogFunc(isTest:bool=is_test):
 
 
 # 알림 함수
-def notificationFunc():
-    all_Timetable = get_json_data(jsonFileName="main_data.json")
+def notification_func():
+    all_Timetable = get_json_data(json_file_name="timetable.json")
     basic_timetable, breaktime = all_Timetable["BASIC_TIMETABLE"], all_Timetable["BREAKTIME"]
     
     while True:
@@ -425,15 +414,18 @@ def notificationFunc():
                     notify_func(title=f"{txt_today} Class Notification",
                         message=f"Next Class: {basic_timetable[txt_today][next_time]}",
                         time=next_time,
-                        notifiedTimes=notified_times)
+                        notified_times=notified_times)
                 breakKey = "MWF" if is_mwf(txt_today) else "TT"
                 if next_time in breaktime[breakKey]:
                     notify_func(title=f"{txt_today} Break Notification",
                         message=f"10 minutes left until the {breaktime[breakKey][next_time]}",
                         time=next_time,
-                        notifiedTimes=notified_times)
+                        notified_times=notified_times)
                 logging_func(title="weekdays", comment=f"{txt_today} KEEP RUNNING")
             else:
                 logging_func(title="weekends", comment=f"{txt_today} KEEP RUNNING")
             
             time.sleep(1)
+
+# 전체적인 리팩터링
+# 로그 기록 적당하게 두기
