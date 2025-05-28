@@ -17,7 +17,7 @@ from logging.handlers import TimedRotatingFileHandler
 toaster = ToastNotifier()
 
 # 테스트 변수
-is_weak, is_test = True, True
+is_weak, is_test = True, False
 
 # global 변수
 notified_times = set()
