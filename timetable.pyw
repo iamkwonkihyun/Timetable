@@ -4,7 +4,7 @@ if __name__ == "__main__":
     import subprocess
     import threading
     
-    req_file = "/requirements.txt"
+    req_file = "requirements.txt"
     
     # requirements 설치
     if not os.getenv("REQUIREMENTS_INSTALLED"):
@@ -29,6 +29,3 @@ if __name__ == "__main__":
         # system tray 설정
         app = systemTray()
         app.run()
-    
-    from timetable.main import main
-    main()

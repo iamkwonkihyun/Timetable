@@ -6,8 +6,6 @@ import shutil
 import logging
 import datetime
 import requests
-import threading
-import subprocess
 import win32com.client
 from pathlib import Path
 from win10toast import ToastNotifier
@@ -64,13 +62,10 @@ def program_running_check(test: bool = is_test):
     )
     
     if test:
-        toaster_func(
+        alert_func(
             title="isTest is True",
             comment="now, Test Mode",
         )
-        
-        log_thread = threading.Thread(target=watch_log_func, args=(True), daemon=True)
-        log_thread.start()
         
         shutil.rmtree(log_folder, ignore_errors=True)
         
@@ -85,21 +80,19 @@ def program_running_check(test: bool = is_test):
         logging_func(title="programRunningCheck", comment="···")
         
         if len(process_list) > 0:
-            toaster_func(
+            alert_func(
                 title="😀 Hello!",
-                comment="Timetable is Running!\nNice to meet you :)",
+                comment="Timetable is Running!\nNice to meet you :)"
             )
-            push_notification(title="😀 Hello", comment="Timetable is Running! Nice to meet you")
             logging_func(title="programRunningCheck", comment="GOOD")
             return True
         else:
             check_time += 1
             if check_time == len(program_name):
-                toaster_func(
+                alert_func(
                     title="🤯 What?!",
                     comment="oh No.. bad news..\nsomething went wrong.. :(",
                 )
-                push_notification(title="🤯 What?!", comment="oh No.. bad news..\nsomething went wrong.. :(")
                 logging_func(title="programRunningCheck", comment="FAILED")
                 exit_program_func()
 
@@ -116,8 +109,7 @@ def notify_func(title: str, message: str, time: str, notified_times: set):
     """
     
     if time not in notified_times:
-        toaster_func(title=title, comment=message)
-        push_notification(title=title, comment=message)
+        alert_func(title=title, comment=message)
         logging_func(title="notified", comment=f"{title} | {time}")
         notified_times.add(time)
 
@@ -229,8 +221,7 @@ def is_birthday(today: str, one_notified: set):
     
     if today == all_user_data["USER_DATA"]["BIRTHDAY"] and today not in one_notified:
         logging_func(title="isBirthday",comment="HAPPY BIRTHDAY TO YOU!!!")
-        toaster_func(title="HAPPY BIRTHDAY TO YOU!!!", comment="Today is your birthday!!🎂")
-        push_notification(message="HAPPY BIRTHDAY TO YOU!!!\nToday is your birthday!!🎂")
+        alert_func(title="HAPPY BIRTHDAY TO YOU!!!", comment="Today is your birthday!!🎂")
         one_notified.add(today)
 
 
@@ -298,24 +289,30 @@ def get_json_data(json_file_name: str, root_key: str = None, sub_key: str = None
     return (result, JSON_DATA_PATH) if need_path else result
 
 
-# toaster 함수
-def toaster_func(title: str, comment: str, duration: int = 3, threaded: bool = True, iconPath: str = None):
-    """toaster 함수
+# alert 함수
+def alert_func(title: str, comment: str, duration: int = 3, threaded: bool = True, icon_path: str = None):
+    """알림 함수
 
     Args:
         title (str): 제목
-        comments (str): 내용용
-        duration (int, optional): 지속시간. Defaults to None.
-        threaded (bool, optional): 스레드. Defaults to True.
+        comment (str): 내용
+        duration (int, optional): 지속 시간. Defaults to 3.
+        threaded (bool, optional): 스레딩. Defaults to True.
+        icon_path (str, optional): 아이콘 경로. Defaults to None.
     """
     
+    # 토스터
     toaster.show_toast(
             f"{title}",
             f"{comment}",
             duration=duration,
             threaded=threaded,
-            icon_path=iconPath
+            icon_path=icon_path
         )
+    
+    # ntfy
+    comments = f"{title}\n{comment}"
+    requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
 
 
 # 로깅 함수
@@ -332,18 +329,6 @@ def logging_func(title: str, comment: str, level: str = "info"):
         logging.info("{:<25}: {}".format(title, comment))
     elif level == "debug":
         logging.debug("{:<25}: {}".format(title, comment))
-
-
-# 폰으로 알림 보내는 함수
-def push_notification(title: str, comment: str):
-    """폰으로 알림 보내는 함수
-
-    Args:
-        message (str): 폰으로 보낼 메세지
-    """
-    comments = f"{title}\n{comment}"
-    requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
-    logging_func(title="pushNotification", comment="SUCCESE")
 
 
 # 시간표 시간을 교시로 반환하는 함수
@@ -374,25 +359,6 @@ def exit_program_func():
     sys.exit()
 
 
-# 실시간 로그 확인 함수
-def watch_log_func(isTest:bool=is_test):
-    """실시간 로그 확인 함수
-
-    Args:
-        isTest (bool, optional): 테스트 인자. Defaults to isTest.
-    """
-    if isTest:
-        logging_func(title="isWeekday", comment="TEST MODE")
-        logging_func(title="todayVariable", comment="TEST MODE")
-        cmd = ["powershell", "-Command", "Get-Content logs/app.log -Wait"]
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        try:
-            for line in process.stdout:
-                print(line, end="")
-        except KeyboardInterrupt:
-                process.terminate()
-
-
 # 알림 함수
 def notification_func():
     all_Timetable = get_json_data(json_file_name="timetable.json")
@@ -421,11 +387,4 @@ def notification_func():
                         message=f"10 minutes left until the {breaktime[breakKey][next_time]}",
                         time=next_time,
                         notified_times=notified_times)
-                logging_func(title="weekdays", comment=f"{txt_today} KEEP RUNNING")
-            else:
-                logging_func(title="weekends", comment=f"{txt_today} KEEP RUNNING")
-            
             time.sleep(1)
-
-# 전체적인 리팩터링
-# 로그 기록 적당하게 두기

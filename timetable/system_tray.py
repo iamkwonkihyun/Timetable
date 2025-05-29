@@ -9,7 +9,7 @@ from functools import partial
 from tkinter import messagebox
 from timetable.functions import (
     assets_dir_func, today_variable, is_mwf, is_shortened, get_json_data,
-    exit_program_func, toaster_func, logging_func
+    exit_program_func, notification_func
 )
 
 class systemTray:
@@ -53,8 +53,6 @@ def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
     tray_action = getattr(tray, action)
     tray_action.triggered.connect(function)
     tray.menu.addAction(tray_action)
-    
-    logging_func(title=f"make{title}", comment="SUCCESS")
 
 def updateTooltip(tray, isShortened=False):
     """트레이 아이콘의 툴팁 업데이트"""
@@ -76,7 +74,6 @@ def updateTooltip(tray, isShortened=False):
 
     timetable_message = "\n".join([f"{time}: {task}" for time, task in today_schedule.items()]) or "No schedule available"
     tray.menuIcon.setToolTip(timetable_message)
-    logging_func(title="updateTooltip", comment="SUCCESS")
 
 def setRefresh(tray):
     tray.refreshTimer = QTimer()
@@ -88,11 +85,10 @@ def setShortenedTimetableMode(tray):
     isActivated = is_shortened()
     comment = "Activated" if isActivated else "Deactivated"
     updateTooltip(tray, isShortened=isActivated)
-    toaster_func(
+    notification_func(
         title="shortened timetable",
         comment=f"Shortened Timetable Mode is {comment}"
     )
-    logging_func(title="setShortenedTimetableMode", comment=comment)
 
 def showProfile():
     """프로필 설정 함수"""
