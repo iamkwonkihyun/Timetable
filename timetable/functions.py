@@ -7,15 +7,25 @@ import logging
 import datetime
 import requests
 import win32com.client
+from dotenv import load_dotenv
 from pathlib import Path
 from win10toast import ToastNotifier
 from logging.handlers import TimedRotatingFileHandler
+
+# .env 불러오기
+load_dotenv()
+
+# 키값
+API_KEY = os.getenv("NEIS_API_KEY")
+
+# base url
+base_url = "https://open.neis.go.kr/hub/hisTimetable"
 
 # 토스터 객체 생성
 toaster = ToastNotifier()
 
 # 테스트 변수
-is_weak, is_test = True, False
+is_weak, is_test = True, True
 
 # global 변수
 notified_times = set()
@@ -27,6 +37,49 @@ FUNCTION_DIR = Path(__file__).resolve().parent
 BASE_DIR = FUNCTION_DIR.parent
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
+
+
+def get_api_func(key, ymd):
+    period_to_time = {
+        "1": "08:40",
+        "2": "09:40",
+        "3": "10:40",
+        "4": "11:40",
+        "5": "13:20",
+        "6": "14:20",
+    }
+    
+    # 파라미터를 딕셔너리로 정리
+    params = {
+        "KEY": key,
+        "Type": "json",
+        "pIndex": 1,
+        "pSize": 100,
+        "ATPT_OFCDC_SC_CODE": "B10",         # 교육청 코드
+        "SD_SCHUL_CODE": "7010911",          # 학교 코드
+        "DDDEP_NM": "클라우드보안과",         # 학과명
+        "GRADE": 3,
+        "CLASS_NM": 2,
+        "sem": 1,                           # 학기
+        "AY": 2025,                         # 학년도
+        "ALL_TI_YMD": ymd
+    }
+
+    response = requests.get(base_url, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        
+        # 시간별 과목 딕셔너리 생성
+        timetable = {
+            period_to_time[row["PERIO"]]: row["ITRT_CNTNT"]
+            for row in data["hisTimetable"][1]["row"]
+            if row["PERIO"] in period_to_time
+        }
+
+        # 저장
+        with open(data_dir_func("test.json"), "w", encoding="utf-8") as f:
+            json.dump(timetable, f, ensure_ascii=False, indent=4)
 
 
 # 프로그램 실행 검사 함수
@@ -128,13 +181,14 @@ def today_variable(test: bool = is_test):
     today = datetime.datetime.today()
     
     if test:
-        return "03-22", "Monday", "09:30"
+        return "20250530","03-22", "Monday", "09:30"
 
+    ymd_today = today.strftime("%y%m%d")
     num_today = today.strftime("%m-%d")
     txt_today = today.strftime("%A")
     next_time = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
     
-    return num_today, txt_today, next_time
+    return ymd_today, num_today, txt_today, next_time
 
 
 # 하루가 지나면 특정 변수를 초기화 하는 함수
@@ -361,8 +415,10 @@ def exit_program_func():
 
 # 알림 함수
 def notification_func():
+    today_timetable = get_json_data(json_file_name="api_timetable.json")
+    
     all_Timetable = get_json_data(json_file_name="timetable.json")
-    basic_timetable, breaktime = all_Timetable["BASIC_TIMETABLE"], all_Timetable["BREAKTIME"]
+    breaktime = all_Timetable["BREAKTIME"]
     
     while True:
         # 오늘 날짜, 요일, 시간 불러오기
@@ -376,15 +432,15 @@ def notification_func():
             
             # 주말 주중 확인 함수
             if is_weekday(txt_today):
-                if next_time in basic_timetable[txt_today]:
+                if next_time in today_timetable[txt_today]:
                     notify_func(title=f"{txt_today} Class Notification",
-                        message=f"Next Class: {basic_timetable[txt_today][next_time]}",
+                        message=f"Next Class: {today_timetable[txt_today][next_time]}",
                         time=next_time,
                         notified_times=notified_times)
-                breakKey = "MWF" if is_mwf(txt_today) else "TT"
-                if next_time in breaktime[breakKey]:
+                break_key = "MWF" if is_mwf(txt_today) else "TT"
+                if next_time in breaktime[break_key]:
                     notify_func(title=f"{txt_today} Break Notification",
-                        message=f"10 minutes left until the {breaktime[breakKey][next_time]}",
+                        message=f"10 minutes left until the {breaktime[break_key][next_time]}",
                         time=next_time,
                         notified_times=notified_times)
             time.sleep(1)

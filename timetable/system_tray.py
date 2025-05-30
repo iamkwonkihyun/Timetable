@@ -56,23 +56,30 @@ def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
 
 def updateTooltip(tray, isShortened=False):
     """트레이 아이콘의 툴팁 업데이트"""
-    allTimetable = get_json_data(json_file_name="timetable.json")
+    api_timetable = get_json_data(json_file_name="api_timetable.json")
+    allTimetable = get_json_data(json_file_name="hard_timetable.json")
     converted_timetable = {}
     
-    for day, schedule in allTimetable["BASIC_TIMETABLE"].items():
-        sorted_times = sorted(schedule.keys())  # 시간을 순서대로 정렬
-        converted_schedule = {f"{i+1}교시": schedule[time] for i, time in enumerate(sorted_times)}
-        converted_timetable[day] = converted_schedule
+    # for day, schedule in allTimetable["BASIC_TIMETABLE"].items():
+    #     sorted_times = sorted(schedule.keys())  # 시간을 순서대로 정렬
+    #     converted_schedule = {f"{i+1}교시": schedule[time] for i, time in enumerate(sorted_times)}
+    #     converted_timetable[day] = converted_schedule
+    
+    # for day, schedule in api_timetable.items():
+    #     sorted_times = sorted(schedule.keys())  # 시간을 순서대로 정렬
+    #     converted_schedule = {f"{i+1}교시": schedule[time] for i, time in enumerate(sorted_times)}
+    #     converted_timetable[day] = converted_schedule
         
     shortenedTimetable = allTimetable["SHORTENED_TIMETABLE"]
-    _, txt_today, _ = today_variable()
+    ymd, _, txt_today, _ = today_variable()
 
     today_schedule = (
         shortenedTimetable.get("MWF" if is_mwf(today=txt_today) else "TT", {})
         if isShortened else converted_timetable.get(txt_today, {})
     )
 
-    timetable_message = "\n".join([f"{time}: {task}" for time, task in today_schedule.items()]) or "No schedule available"
+    # timetable_message = "\n".join([f"{time}: {task}" for time, task in today_schedule.items()]) or "No schedule available"
+    timetable_message = "\n".join([f"{time}: {task}" for time, task in api_timetable.items()]) or "No schedule available"
     tray.menuIcon.setToolTip(timetable_message)
 
 def setRefresh(tray):
