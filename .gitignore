@@ -4,6 +4,4 @@ __pycache__/
 logs/
 *.log
 
-test/
-
 .env

@@ -16,11 +16,13 @@ if __name__ == "__main__":
             os.execl(sys.executable, sys.executable, *sys.argv)
             sys.exit()
     
-    from timetable.functions import program_running_check, notification_func
+    from timetable.functions import program_running_check, notification_func, get_api_func
     from timetable.system_tray import systemTray
     
     # 프로그램 실행 체크
     if program_running_check():
+        # api 데이터 불러오기
+        get_api_func()
         
         # timetableReminderFunc 백그라운드에서 단독 실행
         timetableReminderFunc = threading.Thread(target=notification_func, daemon=True)

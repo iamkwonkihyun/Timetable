@@ -39,7 +39,9 @@ ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 
 
-def get_api_func(key, ymd):
+def get_api_func(key = API_KEY):
+    ymd, _, _, _ = today_variable()
+    
     period_to_time = {
         "1": "08:40",
         "2": "09:40",
@@ -47,6 +49,7 @@ def get_api_func(key, ymd):
         "4": "11:40",
         "5": "13:20",
         "6": "14:20",
+        "7": "15:20"
     }
     
     # 파라미터를 딕셔너리로 정리
@@ -78,7 +81,7 @@ def get_api_func(key, ymd):
         }
 
         # 저장
-        with open(data_dir_func("test.json"), "w", encoding="utf-8") as f:
+        with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
             json.dump(timetable, f, ensure_ascii=False, indent=4)
 
 
@@ -422,25 +425,27 @@ def notification_func():
     
     while True:
         # 오늘 날짜, 요일, 시간 불러오기
-        num_today, txt_today, next_time = today_variable()
+        _, num_today, txt_today, next_time = today_variable()
         
         # notifiedTime 변수 초기화 ( 하루가 지날때만 )
         if reset_function(txt_today):
+            get_api_func()
             notified_times.clear()
-            # 생일 확인 함수
-            is_birthday(num_today, notified_times)
             
-            # 주말 주중 확인 함수
-            if is_weekday(txt_today):
-                if next_time in today_timetable[txt_today]:
-                    notify_func(title=f"{txt_today} Class Notification",
-                        message=f"Next Class: {today_timetable[txt_today][next_time]}",
-                        time=next_time,
-                        notified_times=notified_times)
-                break_key = "MWF" if is_mwf(txt_today) else "TT"
-                if next_time in breaktime[break_key]:
-                    notify_func(title=f"{txt_today} Break Notification",
-                        message=f"10 minutes left until the {breaktime[break_key][next_time]}",
-                        time=next_time,
-                        notified_times=notified_times)
+        # 생일 확인 함수
+        is_birthday(num_today, notified_times)
+        
+        # 주말 주중 확인 함수
+        if is_weekday(txt_today):
+            if next_time in today_timetable[txt_today]:
+                notify_func(title=f"{txt_today} Class Notification",
+                    message=f"Next Class: {today_timetable[txt_today][next_time]}",
+                    time=next_time,
+                    notified_times=notified_times)
+            break_key = "MWF" if is_mwf(txt_today) else "TT"
+            if next_time in breaktime[break_key]:
+                notify_func(title=f"{txt_today} Break Notification",
+                    message=f"10 minutes left until the {breaktime[break_key][next_time]}",
+                    time=next_time,
+                    notified_times=notified_times)
             time.sleep(1)
