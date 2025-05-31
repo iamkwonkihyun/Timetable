@@ -181,7 +181,7 @@ def today_variable(test: bool = is_test):
     today = datetime.datetime.today()
     
     if test:
-        return "20250530","03-22", "Monday", "09:30"
+        return "20250531","03-22", "Monday", "09:30"
 
     ymd_today = today.strftime("%y%m%d")
     num_today = today.strftime("%m-%d")
