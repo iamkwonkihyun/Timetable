@@ -8,12 +8,12 @@ from PyQt5.QtCore import QTimer
 from functools import partial
 from tkinter import messagebox
 from timetable.functions import (
-    assets_dir_func, today_variable, is_mwf, is_shortened, get_json_data,
-    exit_program_func, notification_func
+    assets_dir_func, get_json_data, exit_program_func
 )
 
 class systemTray:
     """Windows System Tray Function"""
+    
     
     def __init__(self):
         self.app = QApplication(sys.argv)
@@ -25,8 +25,8 @@ class systemTray:
         # 프로필 트레이
         makeTrayMenu(self, "profile_icon.ico", "profile", showProfile, "profile")
         
-        # 단축 수업 트레이
-        makeTrayMenu(self, "time_icon.ico", "Shortened_Timetable", lambda: setShortenedTimetableMode(self), "shortenedTimetable")
+        # 단축 수업 트레이 ( 추후 수정 예정 )
+        # makeTrayMenu(self, "time_icon.ico", "Shortened_Timetable", lambda: setShortenedTimetableMode(self), "shortenedTimetable")
         
         # 세팅 트레이
         makeTrayMenu(self, "setting_icon.ico", "Settings", lambda: showSettingsWindow(self), "settings")
@@ -40,9 +40,11 @@ class systemTray:
         
         setRefresh(self)
 
+
     def run(self):
         if self.app.exec_() == 0:
             exit_program_func()
+
 
 def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
     """트레이 생성 함수"""
@@ -54,48 +56,31 @@ def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
     tray_action.triggered.connect(function)
     tray.menu.addAction(tray_action)
 
+
 def updateTooltip(tray, isShortened=False):
     """트레이 아이콘의 툴팁 업데이트"""
     api_timetable = get_json_data(json_file_name="api_timetable.json")
-    allTimetable = get_json_data(json_file_name="hard_timetable.json")
-    converted_timetable = {}
-    
-    # for day, schedule in allTimetable["BASIC_TIMETABLE"].items():
-    #     sorted_times = sorted(schedule.keys())  # 시간을 순서대로 정렬
-    #     converted_schedule = {f"{i+1}교시": schedule[time] for i, time in enumerate(sorted_times)}
-    #     converted_timetable[day] = converted_schedule
-    
-    # for day, schedule in api_timetable.items():
-    #     sorted_times = sorted(schedule.keys())  # 시간을 순서대로 정렬
-    #     converted_schedule = {f"{i+1}교시": schedule[time] for i, time in enumerate(sorted_times)}
-    #     converted_timetable[day] = converted_schedule
-        
-    shortenedTimetable = allTimetable["SHORTENED_TIMETABLE"]
-    ymd, _, txt_today, _ = today_variable()
 
-    today_schedule = (
-        shortenedTimetable.get("MWF" if is_mwf(today=txt_today) else "TT", {})
-        if isShortened else converted_timetable.get(txt_today, {})
-    )
-
-    # timetable_message = "\n".join([f"{time}: {task}" for time, task in today_schedule.items()]) or "No schedule available"
     timetable_message = "\n".join([f"{time}: {task}" for time, task in api_timetable.items()]) or "No schedule available"
     tray.menuIcon.setToolTip(timetable_message)
+
 
 def setRefresh(tray):
     tray.refreshTimer = QTimer()
     tray.refreshTimer.timeout.connect(lambda: updateTooltip(tray=tray))
     tray.refreshTimer.start(10 * 1000)  # 10초
 
-def setShortenedTimetableMode(tray):
-    """단축 시간표 모드 알림"""
-    isActivated = is_shortened()
-    comment = "Activated" if isActivated else "Deactivated"
-    updateTooltip(tray, isShortened=isActivated)
-    notification_func(
-        title="shortened timetable",
-        comment=f"Shortened Timetable Mode is {comment}"
-    )
+# 추후 수정 예정
+# def setShortenedTimetableMode(tray):
+#     """단축 시간표 모드 알림"""
+#     isActivated = is_shortened()
+#     comment = "Activated" if isActivated else "Deactivated"
+#     updateTooltip(tray, isShortened=isActivated)
+#     notification_func(
+#         title="shortened timetable",
+#         comment=f"Shortened Timetable Mode is {comment}"
+#     )
+
 
 def showProfile():
     """프로필 설정 함수"""
@@ -103,6 +88,7 @@ def showProfile():
     root.title("profile")
     root.geometry("1000x1000")
     root.mainloop()
+
 
 def saveTimetableFunc(entries, basicTimetable, allTimetablePath, allTimetable, tray, root):
     """시간표 저장 함수"""
@@ -128,6 +114,7 @@ def saveTimetableFunc(entries, basicTimetable, allTimetablePath, allTimetable, t
             messagebox.showinfo("timetable", "변경된 내용이 없습니다.")
 
         root.destroy()
+
 
 def setTimetableFunc(days, times, entries, basicTimetable, allTimetable, allTimetablePath, tray):
     """시간표 수정 창 띄우는 함수"""
@@ -156,6 +143,7 @@ def setTimetableFunc(days, times, entries, basicTimetable, allTimetable, allTime
         command=partial(saveTimetableFunc, entries, basicTimetable, allTimetablePath, allTimetable, tray, root)
     )
     save_button.grid(row=len(times) + 1, column=0, columnspan=len(days) + 1, sticky="ew", pady=10)
+
 
 def showSettingsWindow(tray):
     """settings tray 함수"""

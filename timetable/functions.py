@@ -67,7 +67,9 @@ def get_api_func(key = API_KEY):
         "AY": 2025,                         # 학년도
         "ALL_TI_YMD": ymd
     }
-
+    
+    # ( try, except로 혹시 모를 문제 예방하기 )
+    
     response = requests.get(base_url, params=params)
 
     if response.status_code == 200:
@@ -90,7 +92,7 @@ def program_running_check(test: bool = is_test):
     """프로그램 실행 검사 및 로그 폴더 생성 함수
 
     Args:
-        isTest (bool, optional): 테스트 인자.
+        test (bool, optional): 테스트 인자.
 
     Returns:
         bool: 테스트 중이거나 program이 실행중이면 True를 반환
@@ -161,7 +163,7 @@ def notify_func(title: str, message: str, time: str, notified_times: set):
         title (str): 제목
         message (str): 내용
         timeKey (str): 시간
-        notifiedTimes (set): notifiedTimes 변수
+        notified_times (set): notified_times 변수
     """
     
     if time not in notified_times:

@@ -5,6 +5,7 @@ pypiwin32==223
 PyQt5==5.15.11
 PyQt5-Qt5==5.15.2
 PyQt5_sip==12.17.0
+python-dotenv==1.1.0
 pywin32==307
 requests==2.32.3
 setuptools==78.0.2

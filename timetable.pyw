@@ -1,9 +1,12 @@
 if __name__ == "__main__":
+    
+    # 기본 모듈/라이브러리
     import os
     import sys
     import subprocess
     import threading
     
+    # requirements 파일 변수
     req_file = "requirements.txt"
     
     # requirements 설치
@@ -16,11 +19,13 @@ if __name__ == "__main__":
             os.execl(sys.executable, sys.executable, *sys.argv)
             sys.exit()
     
+    # 모듈/라이브러리
     from timetable.functions import program_running_check, notification_func, get_api_func
     from timetable.system_tray import systemTray
     
     # 프로그램 실행 체크
     if program_running_check():
+        
         # api 데이터 불러오기
         get_api_func()
         
