@@ -11,6 +11,7 @@ from timetable.functions import (
     assets_dir_func, get_json_data, exit_program_func
 )
 
+
 class systemTray:
     """Windows System Tray Function"""
     
@@ -22,14 +23,14 @@ class systemTray:
         self.menuIcon = QSystemTrayIcon(QIcon(menuIconPath), self.app)
         self.menu = QMenu()
 
-        # 프로필 트레이
+        # 프로필 트레이 ( 생일, 이름 수정할 수 있게 코드 추가 예정 )
         makeTrayMenu(self, "profile_icon.ico", "profile", showProfile, "profile")
         
-        # 단축 수업 트레이 ( 추후 수정 예정 )
+        # 단축 수업 트레이 ( 추후 수정 예정 ) ( 수정할 필요 없을지도 )
         # makeTrayMenu(self, "time_icon.ico", "Shortened_Timetable", lambda: setShortenedTimetableMode(self), "shortenedTimetable")
         
         # 세팅 트레이
-        makeTrayMenu(self, "setting_icon.ico", "Settings", lambda: showSettingsWindow(self), "settings")
+        makeTrayMenu(self, "timetable_icon.ico", "Watch_Timetable", lambda: showSettingsWindow(self), "settings")
         
         # 프로그램 종료 트레이
         makeTrayMenu(self, "exit_icon.ico", "Exit", exit_program_func, "exit")
@@ -69,6 +70,7 @@ def setRefresh(tray):
     tray.refreshTimer = QTimer()
     tray.refreshTimer.timeout.connect(lambda: updateTooltip(tray=tray))
     tray.refreshTimer.start(10 * 1000)  # 10초
+
 
 # 추후 수정 예정
 # def setShortenedTimetableMode(tray):
@@ -149,7 +151,7 @@ def showSettingsWindow(tray):
     """settings tray 함수"""
     entries = {}
 
-    allTimetable, allTimetablePath = get_json_data(json_file_name="timetable.json", need_path=True)
+    allTimetable, allTimetablePath = get_json_data(json_file_name="hard_timetable.json", need_path=True)
     basicTimetable = allTimetable["BASIC_TIMETABLE"]
 
     # 창 띄우기
@@ -164,7 +166,7 @@ def showSettingsWindow(tray):
     # 메인 창 버튼들
     edit_button = tk.Button(
         root,
-        text="시간표 설정",
+        text="모든 시간표 보기",
         command=partial(setTimetableFunc, days, times, entries, basicTimetable, allTimetable, allTimetablePath, tray),
         width=35)
     edit_button.grid(row=1, column=0, columnspan=2, sticky="ew", pady=10)

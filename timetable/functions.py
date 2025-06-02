@@ -43,13 +43,13 @@ def get_api_func(key = API_KEY):
     ymd, _, _, _ = today_variable()
     
     period_to_time = {
-        "1": "08:40",
-        "2": "09:40",
-        "3": "10:40",
-        "4": "11:40",
-        "5": "13:20",
-        "6": "14:20",
-        "7": "15:20"
+        "1": "1교시",
+        "2": "2교시",
+        "3": "3교시",
+        "4": "4교시",
+        "5": "5교시",
+        "6": "6교시",
+        "7": "7교시"
     }
     
     # 파라미터를 딕셔너리로 정리
@@ -68,12 +68,14 @@ def get_api_func(key = API_KEY):
         "ALL_TI_YMD": ymd
     }
     
-    # ( try, except로 혹시 모를 문제 예방하기 )
-    
     response = requests.get(base_url, params=params)
+    
 
     if response.status_code == 200:
         data = response.json()
+        
+        with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
         
         # 시간별 과목 딕셔너리 생성
         timetable = {
@@ -86,25 +88,21 @@ def get_api_func(key = API_KEY):
         with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
             json.dump(timetable, f, ensure_ascii=False, indent=4)
 
-
 # 프로그램 실행 검사 함수
 def program_running_check(test: bool = is_test):
-    """프로그램 실행 검사 및 로그 폴더 생성 함수
-
-    Args:
-        test (bool, optional): 테스트 인자.
-
-    Returns:
-        bool: 테스트 중이거나 program이 실행중이면 True를 반환
-    """
     
     check_time = 0
-    log_folder = "logs"
+    log_folder_path = "logs"
+    data_folder_path = "data"
     program_name = get_json_data(json_file_name="etc_data.json", root_key="PROGRAM_DATA", sub_key="PROGRAM_NAME")
     
-    os.makedirs(log_folder, exist_ok=True)
+    if not os.path.exists(log_folder_path):
+        os.makedirs(log_folder_path, exist_ok=True)
     
-    log_file = os.path.join(log_folder, "app.log")
+    if not os.path.exists(data_folder_path):
+        os.makedirs(data_folder_path, exist_ok=True)
+        
+    log_file = os.path.join(log_folder_path, "app.log")
     
     logger = logging.getLogger()
     logger.handlers.clear()
@@ -125,7 +123,7 @@ def program_running_check(test: bool = is_test):
             comment="now, Test Mode",
         )
         
-        shutil.rmtree(log_folder, ignore_errors=True)
+        shutil.rmtree(log_folder_path, ignore_errors=True)
         
         return True
     
@@ -186,7 +184,7 @@ def today_variable(test: bool = is_test):
     today = datetime.datetime.today()
     
     if test:
-        return "20250531","03-22", "Monday", "09:30"
+        return "20250601","03-22", "Monday", "09:30"
 
     ymd_today = today.strftime("%y%m%d")
     num_today = today.strftime("%m-%d")
