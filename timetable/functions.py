@@ -12,14 +12,14 @@ from pathlib import Path
 from win10toast import ToastNotifier
 from logging.handlers import TimedRotatingFileHandler
 
-# .env 불러오기
+# env 불러오기
 load_dotenv()
 
-# 키값
+# 키 변수
 API_KEY = os.getenv("NEIS_API_KEY")
 
-# base url
-base_url = "https://open.neis.go.kr/hub/hisTimetable"
+# base url 변수
+BASE_URL = "https://open.neis.go.kr/hub/hisTimetable"
 
 # 토스터 객체 생성
 toaster = ToastNotifier()
@@ -32,14 +32,20 @@ notified_times = set()
 yesterday = None
 is_activated = False
 
-# 상대경로
-FUNCTION_DIR = Path(__file__).resolve().parent
-BASE_DIR = FUNCTION_DIR.parent
-ASSETS_DIR = BASE_DIR / "assets"
-DATA_DIR = BASE_DIR / "data"
+# 상대경로 변수
+function_dir_path = Path(__file__).resolve().parent
+base_dir_path = function_dir_path.parent
+assets_dir_path = base_dir_path / "assets"
+data_dir_path = base_dir_path / "data"
 
 
-def get_api_func(key = API_KEY):
+def get_api_func(key: str = API_KEY):
+    """시간표 api 받아오는 함수
+
+    Args:
+        key (str, optional): api 키값. Defaults to API_KEY.
+    """
+    
     ymd, _, _, _ = today_variable()
     
     period_to_time = {
@@ -68,29 +74,62 @@ def get_api_func(key = API_KEY):
         "ALL_TI_YMD": ymd
     }
     
-    response = requests.get(base_url, params=params)
+    response = requests.get(BASE_URL, params=params)
+    print(response.status_code)
     
-
     if response.status_code == 200:
         data = response.json()
-        
-        with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-        
-        # 시간별 과목 딕셔너리 생성
-        timetable = {
+
+        # 응답의 RESULT 코드 확인
+        try:
+            result_code = data["hisTimetable"][0]["head"][1]["RESULT"]["CODE"]
+        except (KeyError, IndexError):
+            print("⚠️ 응답 형식 오류")
+            result_code = "UNKNOWN"
+
+        if result_code == "INFO-000":
+            timetable = {
             period_to_time[row["PERIO"]]: row["ITRT_CNTNT"]
             for row in data["hisTimetable"][1]["row"]
             if row["PERIO"] in period_to_time
-        }
+            }
+            with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
+                json.dump(timetable, f, ensure_ascii=False, indent=4)
+            return True
+        elif result_code == "INFO-200":
+            return False
+        else:
+            return False
+    else:
+        return False
+    
+    # if response.status_code == 200:
+    #     data = response.json()
+    #     with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
+    #         json.dump(data, f, ensure_ascii=False, indent=4)
+        
+    #     # 시간별 과목 딕셔너리 생성
+    #     timetable = {
+    #         period_to_time[row["PERIO"]]: row["ITRT_CNTNT"]
+    #         for row in data["hisTimetable"][1]["row"]
+    #         if row["PERIO"] in period_to_time
+    #     }
+        
+    #     # 저장
+    #     with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
+    #         json.dump(timetable, f, ensure_ascii=False, indent=4)
 
-        # 저장
-        with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
-            json.dump(timetable, f, ensure_ascii=False, indent=4)
 
 # 프로그램 실행 검사 함수
 def program_running_check(test: bool = is_test):
-    
+    """프로그램 실행 확인 함수
+
+    Args:
+        test (bool, optional): 테스트 인자. Defaults to is_test.
+
+    Returns:
+        bool: 실행중이면 True, 아니면 프로그램 강제 종료 
+    """
     check_time = 0
     log_folder_path = "logs"
     data_folder_path = "data"
@@ -236,19 +275,6 @@ def is_weekday(today: str, test: bool = is_test, is_week: bool = is_weak):
     return today not in ["Saturday", "Sunday"]
 
 
-# 단축 수업 함수
-def is_shortened(): 
-    """단축 수업 함수
-
-    Returns:
-        bool: !is_acticated
-    """
-    
-    global is_activated
-    is_activated = not is_activated
-    return is_activated
-
-
 # 월수금 확인 함수
 def is_mwf(today: str):
     """오늘이 월수금 인지 확인해주는 함수
@@ -277,7 +303,6 @@ def is_birthday(today: str, one_notified: set):
     all_user_data = get_json_data("etc_data.json")
     
     if today == all_user_data["USER_DATA"]["BIRTHDAY"] and today not in one_notified:
-        logging_func(title="isBirthday",comment="HAPPY BIRTHDAY TO YOU!!!")
         alert_func(title="HAPPY BIRTHDAY TO YOU!!!", comment="Today is your birthday!!🎂")
         one_notified.add(today)
 
@@ -293,7 +318,7 @@ def assets_dir_func(file_name:str):
         str: 파일까지의 상대경로를 str로 반환
     """
     
-    return str(ASSETS_DIR / file_name)
+    return str(assets_dir_path / file_name)
 
 
 # data 상대경로 반환 함수
@@ -306,7 +331,7 @@ def data_dir_func(file_name:str):
     Returns:
         str: 파일까지의 상대경로를 str로 반환
     """
-    return str(DATA_DIR / file_name)
+    return str(data_dir_path / file_name)
 
 
 # json 데이터 반환 함수
@@ -388,26 +413,6 @@ def logging_func(title: str, comment: str, level: str = "info"):
         logging.debug("{:<25}: {}".format(title, comment))
 
 
-# 시간표 시간을 교시로 반환하는 함수
-def convert_timetable(timetable):
-    """시간표 시간을 교시로 변환해주는 함수
-
-    Args:
-        timetable (dict): 시간표
-
-    Returns:
-        시간표: 교시로 변환된 시간표
-    """
-    converted = {}
-    
-    for day, schedule in timetable.items():
-        sorted_times = sorted(schedule.keys())  # 시간을 순서대로 정렬
-        converted_schedule = {f"{i+1}교시": schedule[time] for i, time in enumerate(sorted_times)}
-        converted[day] = converted_schedule
-    
-    return converted
-
-
 # 프로그램 종료 함수
 def exit_program_func():
     """프로그램 종료 함수"""
@@ -429,8 +434,8 @@ def notification_func():
         
         # notifiedTime 변수 초기화 ( 하루가 지날때만 )
         if reset_function(txt_today):
-            get_api_func()
             notified_times.clear()
+            get_api_func()
             
         # 생일 확인 함수
         is_birthday(num_today, notified_times)
@@ -449,3 +454,36 @@ def notification_func():
                     time=next_time,
                     notified_times=notified_times)
             time.sleep(1)
+
+
+# # 시간표 시간을 교시로 반환하는 함수
+# def convert_timetable(timetable):
+#     """시간표 시간을 교시로 변환해주는 함수
+
+#     Args:
+#         timetable (dict): 시간표
+
+#     Returns:
+#         시간표: 교시로 변환된 시간표
+#     """
+#     converted = {}
+    
+#     for day, schedule in timetable.items():
+#         sorted_times = sorted(schedule.keys())  # 시간을 순서대로 정렬
+#         converted_schedule = {f"{i+1}교시": schedule[time] for i, time in enumerate(sorted_times)}
+#         converted[day] = converted_schedule
+    
+#     return converted
+
+
+# # 단축 수업 함수
+# def is_shortened(): 
+#     """단축 수업 함수
+
+#     Returns:
+#         bool: !is_acticated
+#     """
+    
+#     global is_activated
+#     is_activated = not is_activated
+#     return is_activated

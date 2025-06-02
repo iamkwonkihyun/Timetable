@@ -23,11 +23,9 @@ if __name__ == "__main__":
     from timetable.functions import program_running_check, notification_func, get_api_func
     from timetable.system_tray import systemTray
     
-    # 프로그램 실행 체크
-    if program_running_check():
+    # 프로그램 실행 체크 및
+    if program_running_check() and get_api_func():
         
-        # api 데이터 불러오기
-        get_api_func()
         
         # timetableReminderFunc 백그라운드에서 단독 실행
         timetableReminderFunc = threading.Thread(target=notification_func, daemon=True)

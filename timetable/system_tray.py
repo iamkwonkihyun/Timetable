@@ -72,18 +72,6 @@ def setRefresh(tray):
     tray.refreshTimer.start(10 * 1000)  # 10초
 
 
-# 추후 수정 예정
-# def setShortenedTimetableMode(tray):
-#     """단축 시간표 모드 알림"""
-#     isActivated = is_shortened()
-#     comment = "Activated" if isActivated else "Deactivated"
-#     updateTooltip(tray, isShortened=isActivated)
-#     notification_func(
-#         title="shortened timetable",
-#         comment=f"Shortened Timetable Mode is {comment}"
-#     )
-
-
 def showProfile():
     """프로필 설정 함수"""
     root = tk.Tk()
@@ -123,7 +111,6 @@ def setTimetableFunc(days, times, entries, basicTimetable, allTimetable, allTime
     root = tk.Tk()
     root.title("시간표 편집")
     root.geometry("1600x400")
-
     tk.Label(root, text="요일", width=10, borderwidth=1, relief="solid").grid(row=0, column=0)
 
     for i, day in enumerate(days):
@@ -175,3 +162,15 @@ def showSettingsWindow(tray):
     exit_button.grid(row=2, column=0, columnspan=2, sticky="ew", pady=10)
 
     root.mainloop()
+
+
+# 추후 수정 예정
+# def setShortenedTimetableMode(tray):
+#     """단축 시간표 모드 알림"""
+#     isActivated = is_shortened()
+#     comment = "Activated" if isActivated else "Deactivated"
+#     updateTooltip(tray, isShortened=isActivated)
+#     notification_func(
+#         title="shortened timetable",
+#         comment=f"Shortened Timetable Mode is {comment}"
+#     )
