@@ -25,7 +25,7 @@ BASE_URL = "https://open.neis.go.kr/hub/hisTimetable"
 toaster = ToastNotifier()
 
 # 테스트 변수
-is_weak, is_test = True, True
+is_weak, is_test = True, False
 
 # global 변수
 notified_times = set()
