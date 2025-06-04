@@ -6,4 +6,4 @@ logs/
 
 .env
 
-data/
+api_timetable.json
