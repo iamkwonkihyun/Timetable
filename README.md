@@ -7,6 +7,8 @@
 > ## How to Start?
 >
 > > -   레포지토리를 복제합니다<br/>
+> > -   https://open.neis.go.kr/로 접속해서 로그인 후 api키 발급받기
+> > -   .env 파일을 만들어서 NEIS_API_KEY=< 발급받은 API키 넣기 >
 > > -   main.pyw를 더블클릭 합니다<br/>
 > > -   FINISH.<br/>
 >
