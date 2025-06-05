@@ -8,7 +8,7 @@ from PyQt5.QtCore import QTimer
 from functools import partial
 from tkinter import messagebox
 from timetable.functions import (
-    assets_dir_func, get_json_data, exit_program_func
+    assets_dir_func, get_json_data, exit_program_func, convert_timetable
 )
 
 
@@ -58,11 +58,13 @@ def makeTrayMenu(tray:any, icon:str, title:str, function:any, action:any):
     tray.menu.addAction(tray_action)
 
 
-def updateTooltip(tray, isShortened=False):
+def updateTooltip(tray):
     """트레이 아이콘의 툴팁 업데이트"""
-    api_timetable = get_json_data(json_file_name="api_timetable.json")
-
-    timetable_message = "\n".join([f"{time}: {task}" for time, task in api_timetable.items()]) or "No schedule available"
+    api_timetable = get_json_data(json_file_name = "api_timetable.json")
+    
+    converted_timetable = convert_timetable(api_timetable)
+    
+    timetable_message = "\n".join([f"{time}: {task}" for time, task in converted_timetable.items()]) or "No schedule available"
     tray.menuIcon.setToolTip(timetable_message)
 
 
