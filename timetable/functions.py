@@ -146,13 +146,13 @@ def program_running_check(test: bool = is_test) -> None:
         
         return True            
     
+    logging_func(title="programRunningCheck", comment="···")
+    
     for program in program_name:
         
         wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
         service = wmi.ConnectServer(".", "root\\cimv2")
         process_list = service.ExecQuery(f"SELECT * FROM Win32_Process WHERE Name = '{program}'")
-        
-        logging_func(title="programRunningCheck", comment="···")
         
         if len(process_list) > 0:
             alert_func(
