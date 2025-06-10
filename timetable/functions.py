@@ -29,7 +29,7 @@ is_week, is_test = True, False
 
 # global 변수
 notified_times = set()
-yesterday = None
+yesterday = set()
 is_activated = False
 
 # 상대경로 변수
@@ -214,7 +214,7 @@ def today_variable(test: bool = is_test) -> str:
 
 
 # 하루가 지나면 특정 변수를 초기화 하는 함수
-def reset_function(today: str) -> bool:
+def is_yesterday(today: str) -> bool:
     """하루가 지나면 모든 상태를 초기화 하는 함수
 
     Args:
@@ -226,14 +226,18 @@ def reset_function(today: str) -> bool:
     
     global yesterday
     
-    if yesterday == None:
-        yesterday = today
+    if yesterday == set():
+        yesterday.add(today)
         return False
-    elif yesterday != today and yesterday is not None:
-        yesterday = today
+    
+    # yesterday가 비어있지 않고, today랑 다를때만
+    if yesterday != set() and yesterday != today:
+        # 어제의 날짜 지우기
+        yesterday.pop()
+        
+        # 오늘의 날짜 추가
+        yesterday.add(today)
         return True
-    else:
-        return False
 
 
 # 주말인지 주중인지 확인하는 함수
@@ -429,12 +433,15 @@ def notification_func() -> None:
         _, num_today, txt_today, next_time = today_variable()
         
         # notifiedTime 변수 초기화 ( 하루가 지날때만 )
-        if reset_function(txt_today):
+        if is_yesterday(txt_today):
+            # notified_times 변수 초기화
             notified_times.clear()
+
+            # 시간표 갱신
             get_api_func()
             
-        # 생일 확인 함수
-        is_birthday(num_today, notified_times)
+            # 생일 확인 함수
+            is_birthday(num_today, notified_times)
         
         # 주말 주중 확인 함수
         if is_weekday(txt_today):
