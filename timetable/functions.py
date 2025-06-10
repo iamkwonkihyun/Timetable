@@ -173,7 +173,7 @@ def program_running_check(test: bool = is_test) -> None:
 
 
 # 알림 함수
-def notify_func(title: str, message: str, time: str, notified_times: set[str]) -> None:
+def notify_func(title: str, message: str, time: str) -> None:
     """알림 함수
 
     Args:
@@ -182,6 +182,8 @@ def notify_func(title: str, message: str, time: str, notified_times: set[str]) -
         timeKey (str): 시간
         notified_times (set): notified_times 변수
     """
+    
+    global notified_times
     
     if time not in notified_times:
         alert_func(title=title, comment=message)
@@ -275,19 +277,19 @@ def is_mwf(today: str) -> bool:
 
 
 # 생일 확인 함수
-def is_birthday(today: str, one_notified: set[str]) -> None:
+def is_birthday(today: str) -> None:
     """오늘이 생일인지 확인해주는 함수
 
     Args:
         today (str): 오늘 날짜
-        one_notified (set): set 변수
     """
+    global notified_times
     
     all_user_data = get_json_data("etc_data.json")
     
-    if today == all_user_data["USER_DATA"]["BIRTHDAY"] and today not in one_notified:
+    if today == all_user_data["USER_DATA"]["BIRTHDAY"] and today not in notified_times:
         alert_func(title="HAPPY BIRTHDAY TO YOU!!!", comment="Today is your birthday!!🎂")
-        one_notified.add(today)
+        notified_times.add(today)
 
 
 # assets 상대경로 반환 함수
@@ -441,7 +443,7 @@ def notification_func() -> None:
             get_api_func()
             
             # 생일 확인 함수
-            is_birthday(num_today, notified_times)
+            is_birthday(num_today)
         
         # 주말 주중 확인 함수
         if is_weekday(txt_today):
@@ -450,16 +452,14 @@ def notification_func() -> None:
             if next_time in today_timetable:
                 notify_func(title=f"{txt_today} Class Notification",
                     message=f"Next Class: {today_timetable[next_time]}",
-                    time=next_time,
-                    notified_times=notified_times)
+                    time=next_time)
             
             # 쉬는 시간 10분 전 알림 보내는 로직
             break_key = "MWF" if is_mwf(txt_today) else "TT"
             if next_time in breaktime[break_key]:
                 notify_func(title=f"{txt_today} Break Notification",
                     message=f"10 minutes left until the {breaktime[break_key][next_time]}",
-                    time=next_time,
-                    notified_times=notified_times)
+                    time=next_time)
             time.sleep(1)
 
 
