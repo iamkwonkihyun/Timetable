@@ -8,7 +8,7 @@ from PyQt5.QtCore import QTimer
 from functools import partial
 from tkinter import messagebox
 from timetable.functions import (
-    assets_dir_func, get_json_data, exit_program_func, convert_timetable
+    assets_dir_func, get_json_data, exit_program_func, convert_timetable, get_api_func
 )
 
 
@@ -71,7 +71,8 @@ def updateTooltip(tray):
 def setRefresh(tray):
     tray.refreshTimer = QTimer()
     tray.refreshTimer.timeout.connect(lambda: updateTooltip(tray=tray))
-    tray.refreshTimer.start(10 * 1000)  # 10초
+    tray.refreshTimer.start(60 * 1000)  # 60초
+    get_api_func()
 
 
 def showProfile():
