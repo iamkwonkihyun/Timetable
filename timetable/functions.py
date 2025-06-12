@@ -28,7 +28,7 @@ toaster = ToastNotifier()
 is_test = False
 
 # global 변수
-yesterday = set()
+yesterday = None
 
 # 상대경로 변수
 timetable_dir = Path(__file__).resolve().parent
@@ -38,7 +38,7 @@ data_dir = base_dir / "data"
 
 
 # 오늘 날짜, 요일, 시간을 반환하는 함수
-def today_variable(test: bool = is_test) -> str:
+def today_variable(test: bool = is_test, api: bool = False) -> str:
     """오늘 날짜, 요일, 시간을 반환하는 함수
 
     Args:
@@ -51,14 +51,14 @@ def today_variable(test: bool = is_test) -> str:
     today = datetime.datetime.today()
     
     if test:
-        return "20250604","03-22", "Monday", "09:30"
+        return "20250613","03-22", "Monday", "09:30"
 
-    ymd_today = today.strftime("%y%m%d")
-    num_today = today.strftime("%m-%d")
-    txt_today = today.strftime("%A")
+    ymd = today.strftime("%y%m%d") if api else today.strftime("%Y년 %m월 %d일")
+    num = today.strftime("%m-%d")
+    txt = today.strftime("%A")
     next_time = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
     
-    return ymd_today, num_today, txt_today, next_time
+    return ymd, num, txt, next_time
 
 
 def get_api_func(key: str = API_KEY) -> bool:
@@ -68,7 +68,7 @@ def get_api_func(key: str = API_KEY) -> bool:
         key (str, optional): api 키값. Defaults to API_KEY.
     """
     
-    ymd, _, _, _ = today_variable()
+    ymd, _, _, _ = today_variable(api=True)
     
     period_to_time = {
         "1": "08:40",
@@ -105,8 +105,8 @@ def get_api_func(key: str = API_KEY) -> bool:
         try:
             result_code = data["hisTimetable"][0]["head"][1]["RESULT"]["CODE"]
         except (KeyError, IndexError):
-            print("⚠️ 응답 형식 오류")
-            result_code = "UNKNOWN"
+            logging_func(title="get_api_func", comment="wrong_value")
+            return False
 
         if result_code == "INFO-000":
             timetable = {
@@ -182,7 +182,7 @@ def program_running_check(test: bool = is_test) -> None:
                 comment="Timetable is Running!\nNice to meet you :)"
             )
             logging_func(title="programRunningCheck", comment="GOOD")
-            return True
+            return True if get_api_func() else False
         else:
             check_time += 1
             if check_time == len(program_name):
@@ -195,7 +195,7 @@ def program_running_check(test: bool = is_test) -> None:
 
 
 # 알림 함수
-def notify_func(title: str, message: str, time: str, notified_times) -> None:
+def notify_func(title: str, message: str, time: str) -> None:
     """알림 함수
 
     Args:
@@ -203,42 +203,25 @@ def notify_func(title: str, message: str, time: str, notified_times) -> None:
         message (str): 내용
         time (str): 시간
     """
-    
-    if time not in notified_times:
-        notified_times.add(time)
-        alert_func(title=title, comment=message)
-        logging_func(title="notified", comment=f"{title} | {time}")
+    alert_func(title=title, comment=message)
+    logging_func(title="notified", comment=f"{title} | {time}")
 
 
 # 하루가 지나면 특정 변수를 초기화 하는 함수
 def is_yesterday(today: str) -> bool:
-    """하루가 지나면 모든 상태를 초기화 하는 함수
-
-    Args:
-        today (str): 오늘 날짜
-
-    Returns:
-        bool: 다른 날이면 True를 같은 날이면 False를 반환
-    """
+    """하루가 지나면 상태 초기화 여부를 반환"""
     
     global yesterday
-    
-    logging_func("is_yesterday", f"yesterday: {yesterday} today: {today}")
-    
-    if yesterday == set():
-        logging_func("is_yesterday", f"yesterday: {yesterday} today: {today}")
-        yesterday.add(today)
+
+    if yesterday is None:
+        yesterday = today
         return False
     
-    # yesterday가 비어있지 않고, today랑 다를때만
-    if yesterday != set() and yesterday != today:
-        logging_func("is_yesterday", f"yesterday: {yesterday} today: {today}")
-        # 어제의 날짜 지우기
-        yesterday.pop()
-        
-        # 오늘의 날짜 추가
-        yesterday.add(today)
+    if yesterday != today:
+        yesterday = today
         return True
+    
+    return False
 
 
 # 주말인지 주중인지 확인하는 함수
@@ -274,7 +257,7 @@ def is_mwf(today: str) -> bool:
 
 
 # 생일 확인 함수
-def is_birthday(today: str, notified_times) -> None:
+def is_birthday(today: str, notified_times: set[str]) -> None:
     """오늘이 생일인지 확인해주는 함수
 
     Args:
@@ -285,7 +268,6 @@ def is_birthday(today: str, notified_times) -> None:
     
     if today == all_user_data["USER_DATA"]["BIRTHDAY"] and today not in notified_times:
         alert_func(title="HAPPY BIRTHDAY TO YOU!!!", comment="Today is your birthday!!🎂")
-        notified_times.add(today)
 
 
 # assets 상대경로 반환 함수
@@ -368,7 +350,8 @@ def alert_func(
     comment: str,
     duration: int = 3,
     threaded: bool = True,
-    icon_path: str | None = None
+    icon_path: str | None = None,
+    test: bool = is_test
     ) -> None:
     
     """알림 함수
@@ -380,8 +363,6 @@ def alert_func(
         threaded (bool, optional): 스레딩. Defaults to True.
         icon_path (str, optional): 아이콘 경로. Defaults to None.
     """
-    
-    # 토스터
     toaster.show_toast(
             f"{title}",
             f"{comment}",
@@ -389,10 +370,9 @@ def alert_func(
             threaded=threaded,
             icon_path=icon_path
         )
-    
-    # ntfy
-    comments = f"{title}\n{comment}"
-    requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
+    if not test:
+        comments = f"{title}\n{comment}"
+        requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
 
 
 # 로깅 함수
@@ -433,6 +413,49 @@ def convert_timetable(timetable: dict[str, str]) -> dict[str, str]:
     converted_schedule = {f"{i+1}교시": schedule for i, (_, schedule) in enumerate(timetable.items())}
     
     return converted_schedule
+
+
+def timetable_func():
+    today_timetable = get_json_data(json_file_name="api_timetable.json")
+    all_Timetable = get_json_data(json_file_name="hard_timetable.json")
+    breaktime = all_Timetable["BREAKTIME"]
+    notified_times = set()
+    while True:
+        # 오늘 날짜, 요일, 시간 불러오기
+        _, num_today, txt_today, next_time = today_variable()
+        
+        # notifiedTime 변수 초기화 ( 하루가 지날때만 )
+        if is_yesterday(txt_today):
+            # notified_times 변수 초기화
+            notified_times.clear()
+            
+            # 시간표 갱신
+            get_api_func()
+            
+            # 생일 확인 함수
+            if is_birthday(num_today, notified_times):
+                notified_times.add(num_today)
+        # 주말 주중 확인 함수
+        if is_weekday(txt_today):
+            
+            # 다음 교시 과목 알려주는 로직
+            if next_time in today_timetable:
+                print(1)
+                notify_func(title=f"{txt_today} Class Notification",
+                    message=f"Next Class: {today_timetable[next_time]}",
+                    time=next_time)
+                notified_times.add(next_time)
+            
+            # 쉬는 시간 10분 전 알림 보내는 로직
+            break_key = "MWF" if is_mwf(txt_today) else "TT"
+            if next_time in breaktime[break_key] and next_time not in notified_times:
+                print(2)
+                notify_func(title=f"{txt_today} Break Notification",
+                    message=f"10 minutes left until the {breaktime[break_key][next_time]}",
+                    time=next_time)
+                notified_times.add(next_time)
+            
+            time.sleep(1)
 
 
 # # 단축 수업 함수
