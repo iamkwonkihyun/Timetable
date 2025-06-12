@@ -439,7 +439,7 @@ def timetable_func():
         if is_weekday(txt_today):
             
             # 다음 교시 과목 알려주는 로직
-            if next_time in today_timetable:
+            if next_time in today_timetable and next_time not in notified_times:
                 print(1)
                 notify_func(title=f"{txt_today} Class Notification",
                     message=f"Next Class: {today_timetable[next_time]}",
