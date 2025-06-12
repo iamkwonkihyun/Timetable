@@ -12,7 +12,7 @@ from timetable.functions import (
 )
 
 
-class systemTray:
+class system_tray:
     """Windows System Tray Function"""
     
     def __init__(self):
