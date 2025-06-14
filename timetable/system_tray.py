@@ -75,7 +75,7 @@ def update_tooltip(tray):
 def set_refresh(tray):
     tray.refreshTimer = QTimer()
     tray.refreshTimer.timeout.connect(lambda: update_tooltip(tray=tray))
-    tray.refreshTimer.start(60 * 1000)
+    tray.refreshTimer.start(10 * 1000)
 
 
 def show_profile():

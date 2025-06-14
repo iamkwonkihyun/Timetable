@@ -27,9 +27,6 @@ toaster = ToastNotifier()
 # 테스트 변수
 is_test = False
 
-# global 변수
-yesterday = None
-
 # 상대경로 변수
 timetable_dir = Path(__file__).resolve().parent
 base_dir = timetable_dir.parent
@@ -51,7 +48,7 @@ def today_variable(test: bool = is_test, api: bool = False) -> str:
     today = datetime.datetime.today()
     
     if test:
-        return "20250613","03-22", "Monday", "09:30"
+        return "20250614","03-22", "Monday", "09:30"
 
     ymd = today.strftime("%y%m%d") if api else today.strftime("%Y년 %m월 %d일")
     num = today.strftime("%m-%d")
@@ -116,12 +113,16 @@ def get_api_func(key: str = API_KEY) -> bool:
             }
             with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
                 json.dump(timetable, f, ensure_ascii=False, indent=4)
+            logging_func(title="get_api_func", comment="succesed")
             return True
         elif result_code == "INFO-200":
+            logging_func(title="get_api_func", comment="failed")
             return False
         else:
+            logging_func(title="get_api_func", comment="failed")
             return False
     else:
+        logging_func(title="get_api_func", comment="failed")
         return False
 
 
@@ -162,6 +163,8 @@ def program_running_check(test: bool = is_test) -> None:
     )
     
     if test:
+        get_api_func()
+        
         alert_func(title="isTest is True", comment="now, Test Mode")
         
         shutil.rmtree(log_folder_path, ignore_errors=True)
@@ -208,36 +211,18 @@ def notify_func(title: str, message: str, time: str) -> None:
 
 
 # 하루가 지나면 특정 변수를 초기화 하는 함수
-def is_yesterday(today: str) -> bool:
+def is_yesterday(today: str, yesterday: str | None) -> bool:
     """하루가 지나면 상태 초기화 여부를 반환"""
     
-    global yesterday
-
     if yesterday is None:
-        yesterday = today
+        logging_func(title="is_yesterday", comment=f"{yesterday} | {today}")
         return False
     
-    if yesterday != today:
-        yesterday = today
+    if yesterday != today and yesterday is not None:
+        logging_func(title="is_yesterday", comment=f"{yesterday} | {today}")
         return True
     
     return False
-
-
-# 주말인지 주중인지 확인하는 함수
-def is_weekday(today: str):
-    """오늘이 주말인지 주중인지 확인하는 함수
-
-    Args:
-        today (str): 오늘 날짜
-        isTest (bool, optional): 테스트 인자. Defaults to isTest.
-        isWeek (bool, optional): 테스트 인자 주말 주중 선택. Defaults to isWeek.
-
-    Returns:
-        bool: 주말이면 True를 주말이 아니면 False를 반환
-    """
-
-    return today not in ["Saturday", "Sunday"]
 
 
 # 월수금 확인 함수
@@ -420,12 +405,16 @@ def timetable_func():
     all_Timetable = get_json_data(json_file_name="hard_timetable.json")
     breaktime = all_Timetable["BREAKTIME"]
     notified_times = set()
+    yesterday = None
+    
     while True:
         # 오늘 날짜, 요일, 시간 불러오기
         _, num_today, txt_today, next_time = today_variable()
         
         # notifiedTime 변수 초기화 ( 하루가 지날때만 )
-        if is_yesterday(txt_today):
+        if is_yesterday(txt_today, yesterday):
+            yesterday = txt_today
+            
             # notified_times 변수 초기화
             notified_times.clear()
             
@@ -435,12 +424,12 @@ def timetable_func():
             # 생일 확인 함수
             if is_birthday(num_today, notified_times):
                 notified_times.add(num_today)
+
         # 주말 주중 확인 함수
-        if is_weekday(txt_today):
+        if txt_today not in ["Saturday", "Sunday"]:
             
             # 다음 교시 과목 알려주는 로직
             if next_time in today_timetable and next_time not in notified_times:
-                print(1)
                 notify_func(title=f"{txt_today} Class Notification",
                     message=f"Next Class: {today_timetable[next_time]}",
                     time=next_time)
@@ -449,7 +438,6 @@ def timetable_func():
             # 쉬는 시간 10분 전 알림 보내는 로직
             break_key = "MWF" if is_mwf(txt_today) else "TT"
             if next_time in breaktime[break_key] and next_time not in notified_times:
-                print(2)
                 notify_func(title=f"{txt_today} Break Notification",
                     message=f"10 minutes left until the {breaktime[break_key][next_time]}",
                     time=next_time)
@@ -469,3 +457,19 @@ def timetable_func():
 #     global is_activated
 #     is_activated = not is_activated
 #     return is_activated
+
+
+# # 주말인지 주중인지 확인하는 함수
+# def is_weekday(today: str):
+#     """오늘이 주말인지 주중인지 확인하는 함수
+
+#     Args:
+#         today (str): 오늘 날짜
+#         isTest (bool, optional): 테스트 인자. Defaults to isTest.
+#         isWeek (bool, optional): 테스트 인자 주말 주중 선택. Defaults to isWeek.
+
+#     Returns:
+#         bool: 주말이면 True를 주말이 아니면 False를 반환
+#     """
+
+#     return today not in ["Saturday", "Sunday"]
