@@ -8,7 +8,7 @@ from PyQt5.QtCore import QTimer
 from functools import partial
 from tkinter import messagebox
 from timetable.functions import (
-    assets_dir_func, get_json_data, exit_program_func, convert_timetable, get_api_func, today_variable
+    assets_dir_func, get_json_data, exit_program_func, convert_timetable, today_variable, alert_func
 )
 
 
@@ -25,8 +25,7 @@ class system_tray:
         # 프로필 트레이 ( 생일, 이름 수정할 수 있게 코드 추가 예정 )
         make_tray_menu(self, "profile_icon.ico", "profile", show_profile, "profile")
         
-        # 단축 수업 트레이 ( 추후 수정 예정 ) ( 수정할 필요 없을지도 )
-        # makeTrayMenu(self, "time_icon.ico", "Shortened_Timetable", lambda: setShortenedTimetableMode(self), "shortenedTimetable")
+        make_tray_menu(self, "time_icon.ico", "meal", lambda: set_meal_func(self), "meal")
         
         # 세팅 트레이
         make_tray_menu(self, "timetable_icon.ico", "Watch_Timetable", lambda: show_timetable_window(self), "settings")
@@ -57,24 +56,36 @@ def make_tray_menu(tray:any, icon:str, title:str, function:any, action:any):
     tray.menu.addAction(tray_action)
 
 
-def update_tooltip(tray):
+def update_tooltip(tray, meal: bool = False):
     """트레이 아이콘의 툴팁 업데이트"""
     ymd, _, _, _ = today_variable()
     
     api_timetable = get_json_data(json_file_name = "api_timetable.json")
+    meal_list = get_json_data(json_file_name="meal.json")
     
+    meal_list = meal_list[ymd]["중식"].split(",")
     converted_timetable = convert_timetable(api_timetable)
     
+    meal_message = "\n".join([f"{food}" for food in meal_list])
     timetable_message = "\n".join([f"{time}: {task}" for time, task in converted_timetable.items()]) or "No schedule available"
     
-    timetable_message = f"{ymd}\n{timetable_message}"
+    
+    timetable_message = f"""{ymd}
+-------------
+{meal_message if meal else timetable_message}"""
     
     tray.menuIcon.setToolTip(timetable_message)
 
 
+def set_meal_func(tray):
+    tray.meal_state = not getattr(tray, 'meal_state', False)
+    alert_func("show meal", "change state", only_toast=True)
+    update_tooltip(tray, meal=tray.meal_state)
+
+
 def set_refresh(tray):
     tray.refreshTimer = QTimer()
-    tray.refreshTimer.timeout.connect(lambda: update_tooltip(tray=tray))
+    tray.refreshTimer.timeout.connect(lambda: update_tooltip(tray, meal=getattr(tray, 'meal_state', False)))
     tray.refreshTimer.start(10 * 1000)
 
 

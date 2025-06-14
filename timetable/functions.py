@@ -19,13 +19,14 @@ load_dotenv()
 API_KEY = os.getenv("NEIS_API_KEY")
 
 # base url 변수
-BASE_URL = "https://open.neis.go.kr/hub/hisTimetable"
+TIMETABLE_URL = "https://open.neis.go.kr/hub/hisTimetable"
+MEAL_URL = "https://open.neis.go.kr/hub/mealServiceDietInfo"
 
 # 토스터 객체 생성
 toaster = ToastNotifier()
 
 # 테스트 변수
-is_test = False
+is_test = True
 
 # 상대경로 변수
 timetable_dir = Path(__file__).resolve().parent
@@ -48,7 +49,7 @@ def today_variable(test: bool = is_test, api: bool = False) -> str:
     today = datetime.datetime.today()
     
     if test:
-        return "20250614","03-22", "Monday", "09:30"
+        return "20250613","03-22", "Monday", "09:30"
 
     ymd = today.strftime("%y%m%d") if api else today.strftime("%Y년 %m월 %d일")
     num = today.strftime("%m-%d")
@@ -58,7 +59,64 @@ def today_variable(test: bool = is_test, api: bool = False) -> str:
     return ymd, num, txt, next_time
 
 
-def get_api_func(key: str = API_KEY) -> bool:
+def get_meal_api_func(key: str = API_KEY) -> bool:
+    ymd, _, _, _ = today_variable(api=True)
+    
+    params = {
+        "KEY": key,
+        "Type": "json",
+        "pIndex": 1,
+        "pSize": 100,
+        "ATPT_OFCDC_SC_CODE": "B10",     # 서울시교육청
+        "SD_SCHUL_CODE": "7010911",       # 한세사이버보안고등학교
+        "MLSV_YMD" : ymd
+    }
+
+    try:
+        response = requests.get(MEAL_URL, params=params)
+        if response.status_code != 200:
+            logging_func("get_meal_api_func", "HTTP failed")
+            return False
+
+        data = response.json()
+
+        # 응답 결과 코드 확인
+        try:
+            result_code = data["mealServiceDietInfo"][0]["head"][1]["RESULT"]["CODE"]
+        except (KeyError, IndexError):
+            logging_func("get_meal_api_func", "wrong_value")
+            return False
+
+        if result_code == "INFO-000":
+            rows = data["mealServiceDietInfo"][1]["row"]
+            meal_info = {}
+
+            for row in rows:
+                date = row.get("MLSV_YMD")
+                meal_type = row.get("MMEAL_SC_NM")  # 조식, 중식, 석식 중 선택
+                menu = row.get("DDISH_NM", "").replace("<br/>", ",")
+                
+                if date not in meal_info:
+                    meal_info[date] = {}
+
+                meal_info[date][meal_type] = menu
+
+            # JSON 파일로 저장
+            with open(data_dir_func("meal.json"), "w", encoding="utf-8") as f:
+                json.dump(meal_info, f, ensure_ascii=False, indent=4)
+
+            logging_func("get_meal_api_func", "succeeded")
+            return True
+        else:
+            logging_func("get_meal_api_func", f"failed: {result_code}")
+            return False
+
+    except Exception as e:
+        logging_func("get_meal_api_func", f"exception: {str(e)}")
+        return False
+
+
+def get_timetable_api_func(key: str = API_KEY) -> bool:
     """시간표 api 받아오는 함수
 
     Args:
@@ -93,7 +151,7 @@ def get_api_func(key: str = API_KEY) -> bool:
         "ALL_TI_YMD": ymd
     }
     
-    response = requests.get(BASE_URL, params=params)
+    response = requests.get(TIMETABLE_URL, params=params)
     
     if response.status_code == 200:
         data = response.json()
@@ -163,13 +221,14 @@ def program_running_check(test: bool = is_test) -> None:
     )
     
     if test:
-        get_api_func()
+        get_meal_api_func()
+        get_timetable_api_func()
         
         alert_func(title="isTest is True", comment="now, Test Mode")
         
         shutil.rmtree(log_folder_path, ignore_errors=True)
         
-        return True            
+        return True
     
     logging_func(title="programRunningCheck", comment="···")
     
@@ -185,7 +244,7 @@ def program_running_check(test: bool = is_test) -> None:
                 comment="Timetable is Running!\nNice to meet you :)"
             )
             logging_func(title="programRunningCheck", comment="GOOD")
-            return True if get_api_func() else False
+            return True if get_timetable_api_func() and get_meal_api_func() else False
         else:
             check_time += 1
             if check_time == len(program_name):
@@ -336,7 +395,7 @@ def alert_func(
     duration: int = 3,
     threaded: bool = True,
     icon_path: str | None = None,
-    test: bool = is_test
+    only_toast: bool = is_test
     ) -> None:
     
     """알림 함수
@@ -347,6 +406,7 @@ def alert_func(
         duration (int, optional): 지속 시간. Defaults to 3.
         threaded (bool, optional): 스레딩. Defaults to True.
         icon_path (str, optional): 아이콘 경로. Defaults to None.
+        only_toast (bool, optional): 토스터만 필요한지
     """
     toaster.show_toast(
             f"{title}",
@@ -355,7 +415,7 @@ def alert_func(
             threaded=threaded,
             icon_path=icon_path
         )
-    if not test:
+    if not only_toast:
         comments = f"{title}\n{comment}"
         requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
 
@@ -419,7 +479,7 @@ def timetable_func():
             notified_times.clear()
             
             # 시간표 갱신
-            get_api_func()
+            get_timetable_api_func()
             
             # 생일 확인 함수
             if is_birthday(num_today, notified_times):
