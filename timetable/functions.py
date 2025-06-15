@@ -26,7 +26,7 @@ MEAL_URL = "https://open.neis.go.kr/hub/mealServiceDietInfo"
 toaster = ToastNotifier()
 
 # 테스트 변수
-is_test = True
+is_test = False
 
 # 상대경로 변수
 timetable_dir = Path(__file__).resolve().parent
