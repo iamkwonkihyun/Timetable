@@ -22,10 +22,10 @@ class system_tray:
         self.menuIcon = QSystemTrayIcon(QIcon(menuIconPath), self.app)
         self.menu = QMenu()
 
-        # 프로필 트레이 ( 생일, 이름 수정할 수 있게 코드 추가 예정 )
-        make_tray_menu(self, "profile_icon.ico", "profile", show_profile, "profile")
+        # # 프로필 트레이 ( 생일, 이름 수정할 수 있게 코드 추가 예정 )
+        # make_tray_menu(self, "profile_icon.ico", "profile", show_profile, "profile")
         
-        make_tray_menu(self, "time_icon.ico", "meal", lambda: set_meal_func(self), "meal")
+        make_tray_menu(self, "meal_icon.ico", "meal", lambda: set_meal_func(self), "meal")
         
         # 세팅 트레이
         make_tray_menu(self, "timetable_icon.ico", "Watch_Timetable", lambda: show_timetable_window(self), "settings")
@@ -58,20 +58,20 @@ def make_tray_menu(tray:any, icon:str, title:str, function:any, action:any):
 
 def update_tooltip(tray, meal: bool = False):
     """트레이 아이콘의 툴팁 업데이트"""
-    ymd, _, _, _ = today_variable()
+    api_ymd, _, _, _ = today_variable(api=True)
+    basic_ymd, _, _, _ = today_variable()
     
     api_timetable = get_json_data(json_file_name = "api_timetable.json")
-    meal_list = get_json_data(json_file_name="meal.json")
+    meal_list = get_json_data(json_file_name="api_meal.json")
     
-    meal_list = meal_list[ymd]["중식"].split(",")
+    meal_list = meal_list[api_ymd]["중식"].split(",")
     converted_timetable = convert_timetable(api_timetable)
     
     meal_message = "\n".join([f"{food}" for food in meal_list])
     timetable_message = "\n".join([f"{time}: {task}" for time, task in converted_timetable.items()]) or "No schedule available"
     
     
-    timetable_message = f"""{ymd}
--------------
+    timetable_message = f"""{basic_ymd}
 {meal_message if meal else timetable_message}"""
     
     tray.menuIcon.setToolTip(timetable_message)
@@ -87,14 +87,6 @@ def set_refresh(tray):
     tray.refreshTimer = QTimer()
     tray.refreshTimer.timeout.connect(lambda: update_tooltip(tray, meal=getattr(tray, 'meal_state', False)))
     tray.refreshTimer.start(10 * 1000)
-
-
-def show_profile():
-    """프로필 설정 함수"""
-    root = tk.Tk()
-    root.title("profile")
-    root.geometry("1000x1000")
-    root.mainloop()
 
 
 def save_timetable_func(entries, basicTimetable, allTimetablePath, allTimetable, tray, root):
@@ -191,3 +183,11 @@ def show_timetable_window(tray):
 #         title="shortened timetable",
 #         comment=f"Shortened Timetable Mode is {comment}"
 #     )
+
+
+# def show_profile():
+#     """프로필 설정 함수"""
+#     root = tk.Tk()
+#     root.title("profile")
+#     root.geometry("1000x1000")
+#     root.mainloop()

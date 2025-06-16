@@ -7,3 +7,4 @@ logs/
 .env
 
 api_timetable.json
+api_meal.json

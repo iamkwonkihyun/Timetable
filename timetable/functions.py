@@ -51,7 +51,7 @@ def today_variable(test: bool = is_test, api: bool = False) -> str:
     if test:
         return "20250613","03-22", "Monday", "09:30"
 
-    ymd = today.strftime("%y%m%d") if api else today.strftime("%Y년 %m월 %d일")
+    ymd = today.strftime("%Y%m%d") if api else today.strftime("%Y년 %m월 %d일")
     num = today.strftime("%m-%d")
     txt = today.strftime("%A")
     next_time = (today + datetime.timedelta(minutes=10)).strftime("%H:%M")
@@ -59,6 +59,7 @@ def today_variable(test: bool = is_test, api: bool = False) -> str:
     return ymd, num, txt, next_time
 
 
+# 급식표 api 받아오는 함수
 def get_meal_api_func(key: str = API_KEY) -> bool:
     ymd, _, _, _ = today_variable(api=True)
     
@@ -102,10 +103,10 @@ def get_meal_api_func(key: str = API_KEY) -> bool:
                 meal_info[date][meal_type] = menu
 
             # JSON 파일로 저장
-            with open(data_dir_func("meal.json"), "w", encoding="utf-8") as f:
+            with open(data_dir_func("api_meal.json"), "w", encoding="utf-8") as f:
                 json.dump(meal_info, f, ensure_ascii=False, indent=4)
 
-            logging_func("get_meal_api_func", "succeeded")
+            logging_func("get_meal_api_func", "success")
             return True
         else:
             logging_func("get_meal_api_func", f"failed: {result_code}")
@@ -116,6 +117,7 @@ def get_meal_api_func(key: str = API_KEY) -> bool:
         return False
 
 
+# 시간표 api 받아오는 함수
 def get_timetable_api_func(key: str = API_KEY) -> bool:
     """시간표 api 받아오는 함수
 
@@ -171,7 +173,7 @@ def get_timetable_api_func(key: str = API_KEY) -> bool:
             }
             with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
                 json.dump(timetable, f, ensure_ascii=False, indent=4)
-            logging_func(title="get_api_func", comment="succesed")
+            logging_func(title="get_api_func", comment="success")
             return True
         elif result_code == "INFO-200":
             logging_func(title="get_api_func", comment="failed")
@@ -224,9 +226,9 @@ def program_running_check(test: bool = is_test) -> None:
         get_meal_api_func()
         get_timetable_api_func()
         
-        alert_func(title="isTest is True", comment="now, Test Mode")
-        
         shutil.rmtree(log_folder_path, ignore_errors=True)
+        
+        alert_func(title="isTest is True", comment="now, Test Mode")
         
         return True
     
@@ -273,31 +275,15 @@ def notify_func(title: str, message: str, time: str) -> None:
 def is_yesterday(today: str, yesterday: str | None) -> bool:
     """하루가 지나면 상태 초기화 여부를 반환"""
     
-    if yesterday is None:
+    if yesterday == None:
         logging_func(title="is_yesterday", comment=f"{yesterday} | {today}")
-        return False
+        return True
     
-    if yesterday != today and yesterday is not None:
+    if yesterday != None and yesterday != today:
         logging_func(title="is_yesterday", comment=f"{yesterday} | {today}")
         return True
     
     return False
-
-
-# 월수금 확인 함수
-def is_mwf(today: str) -> bool:
-    """오늘이 월수금 인지 확인해주는 함수
-
-    Args:
-        today (str): 오늘 요일을 받아옴
-
-    Returns:
-        bool: 오늘이 월수금이면 True를 아니면 False를 반환
-    """
-    if today in ["Monday", "Wednesday", "Friday"]:
-        return True
-    else:
-        return False
 
 
 # 생일 확인 함수
@@ -460,6 +446,7 @@ def convert_timetable(timetable: dict[str, str]) -> dict[str, str]:
     return converted_schedule
 
 
+# 중요한 함수
 def timetable_func():
     today_timetable = get_json_data(json_file_name="api_timetable.json")
     all_Timetable = get_json_data(json_file_name="hard_timetable.json")
@@ -496,7 +483,7 @@ def timetable_func():
                 notified_times.add(next_time)
             
             # 쉬는 시간 10분 전 알림 보내는 로직
-            break_key = "MWF" if is_mwf(txt_today) else "TT"
+            break_key = "MWF" if txt_today in ["Monday", "Wednesday", "Friday"] else "TT"
             if next_time in breaktime[break_key] and next_time not in notified_times:
                 notify_func(title=f"{txt_today} Break Notification",
                     message=f"10 minutes left until the {breaktime[break_key][next_time]}",
@@ -533,3 +520,19 @@ def timetable_func():
 #     """
 
 #     return today not in ["Saturday", "Sunday"]
+
+
+# # 월수금 확인 함수
+# def is_mwf(today: str) -> bool:
+#     """오늘이 월수금 인지 확인해주는 함수
+
+#     Args:
+#         today (str): 오늘 요일을 받아옴
+
+#     Returns:
+#         bool: 오늘이 월수금이면 True를 아니면 False를 반환
+#     """
+#     if today in ["Monday", "Wednesday", "Friday"]:
+#         return True
+#     else:
+#         return False
