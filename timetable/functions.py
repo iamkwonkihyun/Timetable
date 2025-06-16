@@ -228,7 +228,7 @@ def program_running_check(test: bool = is_test) -> None:
         
         shutil.rmtree(log_folder_path, ignore_errors=True)
         
-        alert_func(title="isTest is True", comment="now, Test Mode")
+        alert_func(title="테스트 모드 알림", comment="테스트 모드입니다")
         
         return True
     
@@ -242,8 +242,8 @@ def program_running_check(test: bool = is_test) -> None:
         
         if len(process_list) > 0:
             alert_func(
-                title="😀 Hello!",
-                comment="Timetable is Running!\nNice to meet you :)"
+                title="😀 안녕하세요!",
+                comment="Timetable이 실행중입니다!\n만나서 반가워요!"
             )
             logging_func(title="programRunningCheck", comment="GOOD")
             return True if get_timetable_api_func() and get_meal_api_func() else False
@@ -251,8 +251,8 @@ def program_running_check(test: bool = is_test) -> None:
             check_time += 1
             if check_time == len(program_name):
                 alert_func(
-                    title="🤯 What?!",
-                    comment="oh No.. bad news..\nsomething went wrong.. :(",
+                    title="🤯 음??!!",
+                    comment="이런.. 안 좋은 소식이 있어요..\n프로그램에 무슨 문제가 있나봐요..",
                 )
                 logging_func(title="programRunningCheck", comment="FAILED")
                 exit_program_func()
@@ -479,16 +479,16 @@ def timetable_func(app):
             
             # 다음 교시 과목 알려주는 로직
             if next_time in today_timetable and next_time not in notified_times:
-                notify_func(title=f"{txt_today} Class Notification",
-                    message=f"Next Class: {today_timetable[next_time]}",
+                notify_func(title=f"{txt_today} 과목 알림",
+                    message=f"다음 교시 과목: {today_timetable[next_time]}",
                     time=next_time)
                 notified_times.add(next_time)
             
             # 쉬는 시간 10분 전 알림 보내는 로직
             break_key = "MWF" if txt_today in ["Monday", "Wednesday", "Friday"] else "TT"
             if next_time in breaktime[break_key] and next_time not in notified_times:
-                notify_func(title=f"{txt_today} Break Notification",
-                    message=f"10 minutes left until the {breaktime[break_key][next_time]}",
+                notify_func(title=f"{txt_today} 쉬는 시간 알림",
+                    message=f"{breaktime[break_key][next_time]} 쉬는 시간까지 10분 남았습니다",
                     time=next_time)
                 notified_times.add(next_time)
             

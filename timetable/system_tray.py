@@ -2,15 +2,13 @@ import sys
 import tkinter as tk
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
-from timetable.functions import assets_dir_func, exit_program_func
-from PyQt5.QtCore import QTimer
 from timetable.functions import (
     assets_dir_func, get_json_data, exit_program_func, convert_timetable, today_variable, alert_func
 )
 
 
 class system_tray:
-    """Windows System Tray Function"""
+    """윈도우 시스템 트레이 클래스"""
     
     def __init__(self):
         self.app = QApplication(sys.argv)
@@ -22,13 +20,13 @@ class system_tray:
         # # 프로필 트레이 ( 생일, 이름 수정할 수 있게 코드 추가 예정 )
         # make_tray_menu(self, "profile_icon.ico", "profile", show_profile, "profile")
         
-        make_tray_menu(self, "meal_icon.ico", "meal", lambda: set_meal_func(self), "meal")
+        make_tray_menu(self, "meal_icon.ico", "급식표", lambda: set_meal_func(self), "meal")
         
         # 세팅 트레이
-        make_tray_menu(self, "timetable_icon.ico", "Watch_Timetable", lambda: show_timetable_window(self), "settings")
+        make_tray_menu(self, "timetable_icon.ico", "시간표", show_timetable_window, "settings")
         
         # 프로그램 종료 트레이
-        make_tray_menu(self, "exit_icon.ico", "Exit", exit_program_func, "exit")
+        make_tray_menu(self, "exit_icon.ico", "프로그램 종료", exit_program_func, "exit")
 
         self.menuIcon.setContextMenu(self.menu)
         update_tooltip(self)
@@ -46,6 +44,7 @@ class system_tray:
 
 def make_tray_menu(self, icon: str, title: str, function: any, action: any):
     """트레이 생성 함수"""
+    
     iconPath = assets_dir_func(icon)
     
     setattr(self, action, QAction(QIcon(iconPath), title, self.menu))
@@ -57,6 +56,7 @@ def make_tray_menu(self, icon: str, title: str, function: any, action: any):
 
 def update_tooltip(self, meal: bool = False):
     """트레이 아이콘의 툴팁 업데이트"""
+    
     api_ymd, _, _, _ = today_variable(api=True)
     basic_ymd, _, _, _ = today_variable()
     
@@ -82,7 +82,7 @@ def set_meal_func(self):
     update_tooltip(self, meal=self.meal_state)
 
 
-def show_timetable_window(self):
+def show_timetable_window():
     """settings tray 함수"""
     entries = {}
 
