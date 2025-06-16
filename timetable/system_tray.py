@@ -1,12 +1,9 @@
 import sys
-import json
 import tkinter as tk
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
 from timetable.functions import assets_dir_func, exit_program_func
 from PyQt5.QtCore import QTimer
-from functools import partial
-from tkinter import messagebox
 from timetable.functions import (
     assets_dir_func, get_json_data, exit_program_func, convert_timetable, today_variable, alert_func
 )
@@ -37,26 +34,28 @@ class system_tray:
         update_tooltip(self)
         self.menuIcon.show()
         
-        set_refresh(self)
-
-
+        
+    def set_refresh(self):
+        update_tooltip(self, meal=getattr(self, 'meal_state', False))
+        
+        
     def run(self):
         if self.app.exec_() == 0:
             exit_program_func()
 
 
-def make_tray_menu(tray:any, icon:str, title:str, function:any, action:any):
+def make_tray_menu(self, icon: str, title: str, function: any, action: any):
     """트레이 생성 함수"""
     iconPath = assets_dir_func(icon)
     
-    setattr(tray, action, QAction(QIcon(iconPath), title, tray.menu))
+    setattr(self, action, QAction(QIcon(iconPath), title, self.menu))
     
-    tray_action = getattr(tray, action)
+    tray_action = getattr(self, action)
     tray_action.triggered.connect(function)
-    tray.menu.addAction(tray_action)
+    self.menu.addAction(tray_action)
 
 
-def update_tooltip(tray, meal: bool = False):
+def update_tooltip(self, meal: bool = False):
     """트레이 아이콘의 툴팁 업데이트"""
     api_ymd, _, _, _ = today_variable(api=True)
     basic_ymd, _, _, _ = today_variable()
@@ -74,53 +73,30 @@ def update_tooltip(tray, meal: bool = False):
     timetable_message = f"""{basic_ymd}
 {meal_message if meal else timetable_message}"""
     
-    tray.menuIcon.setToolTip(timetable_message)
+    self.menuIcon.setToolTip(timetable_message)
 
 
-def set_meal_func(tray):
-    tray.meal_state = not getattr(tray, 'meal_state', False)
+def set_meal_func(self):
+    self.meal_state = not getattr(self, 'meal_state', False)
     alert_func("show meal", "change state", only_toast=True)
-    update_tooltip(tray, meal=tray.meal_state)
+    update_tooltip(self, meal=self.meal_state)
 
 
-def set_refresh(tray):
-    tray.refreshTimer = QTimer()
-    tray.refreshTimer.timeout.connect(lambda: update_tooltip(tray, meal=getattr(tray, 'meal_state', False)))
-    tray.refreshTimer.start(10 * 1000)
+def show_timetable_window(self):
+    """settings tray 함수"""
+    entries = {}
 
+    all_timetable, _ = get_json_data(json_file_name="hard_timetable.json", need_path=True)
+    basic_timetable = all_timetable["BASIC_TIMETABLE"]
 
-def save_timetable_func(entries, basicTimetable, allTimetablePath, allTimetable, tray, root):
-    """시간표 저장 함수"""
-    result = messagebox.askquestion("질문", "저장하시겠습니까?")
-    if result == "yes":
-        updated = False
-        
-        for day, schedule in entries.items():
-            for time, entry in schedule.items():
-                new_value = entry.get().strip()
-                old_value = basicTimetable.get(day, {}).get(time, "")
-
-                if new_value != old_value:
-                    basicTimetable.setdefault(day, {})[time] = new_value
-                    updated = True
-
-        if updated:
-            with open(allTimetablePath, "w", encoding="utf-8") as f:
-                json.dump(allTimetable, f, ensure_ascii=False, indent=4)
-            messagebox.showinfo("timetable", "저장 성공")
-            update_tooltip(tray)
-        else:
-            messagebox.showinfo("timetable", "변경된 내용이 없습니다.")
-
-        root.destroy()
-
-
-def set_timetable_func(days, times, entries, basicTimetable, allTimetable, allTimetablePath, tray):
-    """시간표 수정 창 띄우는 함수"""
     root = tk.Tk()
     root.title("시간표 편집")
-    root.geometry("1600x400")
+    root.geometry("1550x300")
     tk.Label(root, text="요일", width=10, borderwidth=1, relief="solid").grid(row=0, column=0)
+
+    # 요일과 시간 리스트 생성
+    days = list(basic_timetable.keys())
+    times = sorted({time for schedule in basic_timetable.values() for time in schedule.keys()})
 
     for i, day in enumerate(days):
         tk.Label(root, text=day, width=20, borderwidth=1, relief="solid").grid(row=0, column=i+1)
@@ -129,46 +105,11 @@ def set_timetable_func(days, times, entries, basicTimetable, allTimetable, allTi
         tk.Label(root, text=time, width=10, borderwidth=1, relief="solid").grid(row=j+1, column=0)
 
         for i, day in enumerate(days):
-            text = basicTimetable.get(day, {}).get(time, "")
+            text = basic_timetable.get(day, {}).get(time, "")
             entry = tk.Entry(root, width=20)
             entry.insert(0, text)
             entry.grid(row=j+1, column=i+1)
             entries.setdefault(day, {})[time] = entry
-
-    save_button = tk.Button(
-        root,
-        text="저장",
-        command=partial(save_timetable_func, entries, basicTimetable, allTimetablePath, allTimetable, tray, root)
-    )
-    save_button.grid(row=len(times) + 1, column=0, columnspan=len(days) + 1, sticky="ew", pady=10)
-
-
-def show_timetable_window(tray):
-    """settings tray 함수"""
-    entries = {}
-
-    allTimetable, allTimetablePath = get_json_data(json_file_name="hard_timetable.json", need_path=True)
-    basicTimetable = allTimetable["BASIC_TIMETABLE"]
-
-    # 창 띄우기
-    root = tk.Tk()
-    root.title("시간표")
-    root.geometry("500x200")
-
-    # 요일과 시간 리스트 생성
-    days = list(basicTimetable.keys())
-    times = sorted({time for schedule in basicTimetable.values() for time in schedule.keys()})
-
-    # 메인 창 버튼들
-    edit_button = tk.Button(
-        root,
-        text="모든 시간표 보기",
-        command=partial(set_timetable_func, days, times, entries, basicTimetable, allTimetable, allTimetablePath, tray),
-        width=35)
-    edit_button.grid(row=1, column=0, columnspan=2, sticky="ew", pady=10)
-
-    exit_button = tk.Button(root, text="종료", command=exit_program_func)
-    exit_button.grid(row=2, column=0, columnspan=2, sticky="ew", pady=10)
 
     root.mainloop()
 
@@ -191,3 +132,57 @@ def show_timetable_window(tray):
 #     root.title("profile")
 #     root.geometry("1000x1000")
 #     root.mainloop()
+
+
+# def save_timetable_func(self, entries, basic_timetable, all_timetable_path, all_timetable, root):
+#     """시간표 저장 함수"""
+#     result = messagebox.askquestion("질문", "저장하시겠습니까?")
+#     if result == "yes":
+#         updated = False
+        
+#         for day, schedule in entries.items():
+#             for time, entry in schedule.items():
+#                 new_value = entry.get().strip()
+#                 old_value = basic_timetable.get(day, {}).get(time, "")
+
+#                 if new_value != old_value:
+#                     basic_timetable.setdefault(day, {})[time] = new_value
+#                     updated = True
+
+#         if updated:
+#             with open(all_timetable_path, "w", encoding="utf-8") as f:
+#                 json.dump(all_timetable, f, ensure_ascii=False, indent=4)
+#             messagebox.showinfo("timetable", "저장 성공")
+#             update_tooltip(self)
+#         else:
+#             messagebox.showinfo("timetable", "변경된 내용이 없습니다.")
+
+#         root.destroy()
+
+
+# def set_timetable_func(self, days, times, entries, basic_timetable, all_timetable, all_timetable_path):
+#     """시간표 수정 창 띄우는 함수"""
+#     root = tk.Tk()
+#     root.title("시간표 편집")
+#     root.geometry("1600x400")
+#     tk.Label(root, text="요일", width=10, borderwidth=1, relief="solid").grid(row=0, column=0)
+
+#     for i, day in enumerate(days):
+#         tk.Label(root, text=day, width=20, borderwidth=1, relief="solid").grid(row=0, column=i+1)
+
+#     for j, time in enumerate(times):
+#         tk.Label(root, text=time, width=10, borderwidth=1, relief="solid").grid(row=j+1, column=0)
+
+#         for i, day in enumerate(days):
+#             text = basic_timetable.get(day, {}).get(time, "")
+#             entry = tk.Entry(root, width=20)
+#             entry.insert(0, text)
+#             entry.grid(row=j+1, column=i+1)
+#             entries.setdefault(day, {})[time] = entry
+
+#     save_button = tk.Button(
+#         root,
+#         text="저장",
+#         command=partial(save_timetable_func, entries, basic_timetable, all_timetable_path, all_timetable, self, root)
+#     )
+#     save_button.grid(row=len(times) + 1, column=0, columnspan=len(days) + 1, sticky="ew", pady=10)

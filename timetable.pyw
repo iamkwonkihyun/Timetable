@@ -1,5 +1,4 @@
 if __name__ == "__main__":
-    
     # 기본 모듈/라이브러리
     import os
     import sys
@@ -17,5 +16,7 @@ if __name__ == "__main__":
             
             os.execl(sys.executable, sys.executable, *sys.argv)
             sys.exit()
+    
+    # main 함수 진입
     from timetable.main import main
     main()

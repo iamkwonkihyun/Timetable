@@ -8,6 +8,6 @@ def main():
     
     # 프로그램 실행 체크 및
     if program_running_check():
-        threading.Thread(target=timetable_func, daemon=True).start()
         app = system_tray()
+        threading.Thread(target=timetable_func, args=(app,), daemon=True).start()
         app.run()

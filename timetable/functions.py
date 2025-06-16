@@ -15,10 +15,10 @@ from logging.handlers import TimedRotatingFileHandler
 # env 불러오기
 load_dotenv()
 
-# 키 변수
+# api 키
 API_KEY = os.getenv("NEIS_API_KEY")
 
-# base url 변수
+# base url
 TIMETABLE_URL = "https://open.neis.go.kr/hub/hisTimetable"
 MEAL_URL = "https://open.neis.go.kr/hub/mealServiceDietInfo"
 
@@ -259,6 +259,38 @@ def program_running_check(test: bool = is_test) -> None:
 
 
 # 알림 함수
+def alert_func(
+    title: str,
+    comment: str,
+    duration: int = 3,
+    threaded: bool = True,
+    icon_path: str | None = None,
+    only_toast: bool = is_test
+    ) -> None:
+    
+    """알림 함수
+
+    Args:
+        title (str): 제목
+        comment (str): 내용
+        duration (int, optional): 지속 시간.
+        threaded (bool, optional): 스레딩.
+        icon_path (str, optional): 아이콘 경로.
+        only_toast (bool, optional): 토스터만 필요한지
+    """
+    toaster.show_toast(
+            f"{title}",
+            f"{comment}",
+            duration=duration,
+            threaded=threaded,
+            icon_path=icon_path
+        )
+    
+    if not only_toast:
+        comments = f"{title}\n{comment}"
+        requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
+
+# 쉬는 시간, 다음 교시 과목 알림 함수 (alert 함수랑 다름)
 def notify_func(title: str, message: str, time: str) -> None:
     """알림 함수
 
@@ -374,38 +406,6 @@ def get_json_data(json_file_name: str,
     return (result, JSON_DATA_PATH) if need_path else result
 
 
-# alert 함수
-def alert_func(
-    title: str,
-    comment: str,
-    duration: int = 3,
-    threaded: bool = True,
-    icon_path: str | None = None,
-    only_toast: bool = is_test
-    ) -> None:
-    
-    """알림 함수
-
-    Args:
-        title (str): 제목
-        comment (str): 내용
-        duration (int, optional): 지속 시간. Defaults to 3.
-        threaded (bool, optional): 스레딩. Defaults to True.
-        icon_path (str, optional): 아이콘 경로. Defaults to None.
-        only_toast (bool, optional): 토스터만 필요한지
-    """
-    toaster.show_toast(
-            f"{title}",
-            f"{comment}",
-            duration=duration,
-            threaded=threaded,
-            icon_path=icon_path
-        )
-    if not only_toast:
-        comments = f"{title}\n{comment}"
-        requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
-
-
 # 로깅 함수
 def logging_func(title: str, comment: str, level: str = "info") -> None:
     """logging 함수
@@ -446,8 +446,8 @@ def convert_timetable(timetable: dict[str, str]) -> dict[str, str]:
     return converted_schedule
 
 
-# 중요한 함수
-def timetable_func():
+# 실질적 main 함수
+def timetable_func(app):
     today_timetable = get_json_data(json_file_name="api_timetable.json")
     all_Timetable = get_json_data(json_file_name="hard_timetable.json")
     breaktime = all_Timetable["BREAKTIME"]
@@ -467,6 +467,8 @@ def timetable_func():
             
             # 시간표 갱신
             get_timetable_api_func()
+            
+            app.set_refresh()
             
             # 생일 확인 함수
             if is_birthday(num_today, notified_times):
@@ -492,6 +494,8 @@ def timetable_func():
             
             time.sleep(1)
 
+
+# - - - - - - 소멸된 함수들 - - - - - - -
 
 # # 단축 수업 함수
 # def is_shortened(): 
