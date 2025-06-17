@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import json
+import locale
 import shutil
 import logging
 import datetime
@@ -14,6 +15,9 @@ from logging.handlers import TimedRotatingFileHandler
 
 # env 불러오기
 load_dotenv()
+
+# 한글화
+locale.setlocale(locale.LC_TIME, "Korean_Korea.utf8")
 
 # api 키
 API_KEY = os.getenv("NEIS_API_KEY")
@@ -475,7 +479,7 @@ def timetable_func(app):
                 notified_times.add(num_today)
 
         # 주말 주중 확인 함수
-        if txt_today not in ["Saturday", "Sunday"]:
+        if txt_today not in ["토요일", "일요일"]:
             
             # 다음 교시 과목 알려주는 로직
             if next_time in today_timetable and next_time not in notified_times:

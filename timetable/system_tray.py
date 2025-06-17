@@ -1,11 +1,14 @@
 import sys
 import tkinter as tk
+import locale
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
 from timetable.functions import (
     assets_dir_func, get_json_data, exit_program_func, convert_timetable, today_variable, alert_func
 )
 
+
+locale.setlocale(locale.LC_TIME, "Korean_Korea")
 
 class system_tray:
     """윈도우 시스템 트레이 클래스"""
@@ -57,7 +60,7 @@ def make_tray_menu(self, icon: str, title: str, function: any, action: any):
 def update_tooltip(self, meal: bool = False):
     """트레이 아이콘의 툴팁 업데이트"""
     
-    api_ymd, _, _, _ = today_variable(api=True)
+    api_ymd, _, txt, _ = today_variable(api=True)
     basic_ymd, _, _, _ = today_variable()
     
     api_timetable = get_json_data(json_file_name = "api_timetable.json")
@@ -68,9 +71,9 @@ def update_tooltip(self, meal: bool = False):
     
     meal_message = "\n".join([f"{food}" for food in meal_list])
     timetable_message = "\n".join([f"{time}: {task}" for time, task in converted_timetable.items()]) or "No schedule available"
+    print(txt)
     
-    
-    timetable_message = f"""{basic_ymd}
+    timetable_message = f"""{basic_ymd}{txt}
 {meal_message if meal else timetable_message}"""
     
     self.menuIcon.setToolTip(timetable_message)
