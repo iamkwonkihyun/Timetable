@@ -1,12 +1,15 @@
+# 표준 라이브러리
+import locale
 import sys
 import tkinter as tk
-import locale
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
-from timetable.functions import (
-    assets_dir_func, get_json_data, exit_program_func, convert_timetable, today_variable, alert_func
-)
 
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QAction, QApplication, QMenu, QSystemTrayIcon
+
+# 로컬 모듈
+from timetable.functions import (alert_func, assets_dir_func,
+                                convert_timetable, exit_program_func,
+                                get_json_data, logging_func, today_variable)
 
 locale.setlocale(locale.LC_TIME, "Korean_Korea")
 
@@ -23,7 +26,7 @@ class system_tray:
         # # 프로필 트레이 ( 생일, 이름 수정할 수 있게 코드 추가 예정 )
         # make_tray_menu(self, "profile_icon.ico", "profile", show_profile, "profile")
         
-        make_tray_menu(self, "meal_icon.ico", "급식표", lambda: set_meal_func(self), "meal")
+        make_tray_menu(self, "meal_icon.ico", "급식표", set_meal_func, "meal")
         
         # 세팅 트레이
         make_tray_menu(self, "timetable_icon.ico", "시간표", show_timetable_window, "settings")
@@ -37,7 +40,8 @@ class system_tray:
         
         
     def set_refresh(self):
-        update_tooltip(self, meal=getattr(self, 'meal_state', False))
+        update_tooltip(self)
+        logging_func("set_refresh", "success")
         
         
     def run(self):
@@ -45,6 +49,7 @@ class system_tray:
             exit_program_func()
 
 
+# 트레이 메뉴 생성 함수
 def make_tray_menu(self, icon: str, title: str, function: any, action: any):
     """트레이 생성 함수"""
     
@@ -57,34 +62,33 @@ def make_tray_menu(self, icon: str, title: str, function: any, action: any):
     self.menu.addAction(tray_action)
 
 
-def update_tooltip(self, meal: bool = False):
+# tooltip 업데이트 함수
+def update_tooltip(self):
     """트레이 아이콘의 툴팁 업데이트"""
     
-    api_ymd, _, txt, _ = today_variable(api=True)
-    basic_ymd, _, _, _ = today_variable()
+    basic_ymd, _, txt, _ = today_variable()
     
     api_timetable = get_json_data(json_file_name = "api_timetable.json")
-    meal_list = get_json_data(json_file_name="api_meal.json")
     
-    meal_list = meal_list[api_ymd]["중식"].split(",")
     converted_timetable = convert_timetable(api_timetable)
     
-    meal_message = "\n".join([f"{food}" for food in meal_list])
     timetable_message = "\n".join([f"{time}: {task}" for time, task in converted_timetable.items()]) or "No schedule available"
-    print(txt)
     
-    timetable_message = f"""{basic_ymd}{txt}
-{meal_message if meal else timetable_message}"""
+    timetable_message = f"{basic_ymd} {txt}\n{timetable_message}"
     
     self.menuIcon.setToolTip(timetable_message)
 
 
-def set_meal_func(self):
-    self.meal_state = not getattr(self, 'meal_state', False)
-    alert_func("show meal", "change state", only_toast=True)
-    update_tooltip(self, meal=self.meal_state)
+# 오늘 급식 보여주는 함수
+def set_meal_func():
+    api_ymd, _, _, _ = today_variable(api=True)
+    meal_list = get_json_data(json_file_name="api_meal.json")
+    meal_list = meal_list[api_ymd]["중식"].split(",")
+    meal_message = "\n".join([f"{food}" for food in meal_list])
+    alert_func(title="급식표", comment=meal_message, only_toast=True)
 
 
+# 전체 시간표 보여주는 함수
 def show_timetable_window():
     """settings tray 함수"""
     entries = {}
