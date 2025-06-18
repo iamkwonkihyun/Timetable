@@ -1,17 +1,18 @@
-import os
-import sys
-import time
+import datetime
 import json
 import locale
-import shutil
 import logging
-import datetime
+import os
+import shutil
+import sys
+import time
+from logging.handlers import TimedRotatingFileHandler
+from pathlib import Path
+
 import requests
 import win32com.client
-from pathlib import Path
 from dotenv import load_dotenv
 from win10toast import ToastNotifier
-from logging.handlers import TimedRotatingFileHandler
 
 # env 불러오기
 load_dotenv()
@@ -294,6 +295,7 @@ def alert_func(
         comments = f"{title}\n{comment}"
         requests.post(f"https://ntfy.sh/Timetable", data=comments.encode("utf-8"))
 
+
 # 쉬는 시간, 다음 교시 과목 알림 함수 (alert 함수랑 다름)
 def notify_func(title: str, message: str, time: str) -> None:
     """알림 함수
@@ -451,7 +453,7 @@ def convert_timetable(timetable: dict[str, str]) -> dict[str, str]:
 
 
 # 실질적 main 함수
-def timetable_func(app):
+def timetable_func(set_refresh):
     today_timetable = get_json_data(json_file_name="api_timetable.json")
     all_Timetable = get_json_data(json_file_name="hard_timetable.json")
     breaktime = all_Timetable["BREAKTIME"]
@@ -472,7 +474,7 @@ def timetable_func(app):
             # 시간표 갱신
             get_timetable_api_func()
             
-            app.set_refresh()
+            set_refresh()
             
             # 생일 확인 함수
             if is_birthday(num_today, notified_times):
