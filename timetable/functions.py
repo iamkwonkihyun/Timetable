@@ -122,7 +122,7 @@ def get_meal_api_func(key: str = API_KEY) -> bool:
 
 
 # 시간표 api 받아오는 함수
-def get_timetable_api_func(key: str = API_KEY) -> bool:
+def get_api_func(key: str = API_KEY) -> bool:
     """시간표 api 받아오는 함수
 
     Args:
@@ -134,7 +134,7 @@ def get_timetable_api_func(key: str = API_KEY) -> bool:
     if get_meal_api_func() == False:
         meal_info = {
                 ymd: {
-                    "중식": "info-200"
+                    "중식": "급식표 api 오류로 인한 에러"
                 }
             }
         with open(data_dir_func("api_meal.json"), "w", encoding="utf-8") as f:
@@ -236,7 +236,7 @@ def program_running_check(test: bool = is_test) -> None:
     )
     
     if test:
-        get_timetable_api_func()
+        get_api_func()
         
         shutil.rmtree(log_folder_path, ignore_errors=True)
         
@@ -258,7 +258,7 @@ def program_running_check(test: bool = is_test) -> None:
                 comment="Timetable이 실행중입니다!\n만나서 반가워요!"
             )
             logging_func(title="programRunningCheck", comment="GOOD")
-            return True if get_timetable_api_func() else False
+            return True if get_api_func() else False
         else:
             check_time += 1
             if check_time == len(program_name):
@@ -479,7 +479,7 @@ def timetable_func(set_refresh):
             notified_times.clear()
             
             # 시간표 갱신
-            get_timetable_api_func()
+            get_api_func()
             
             set_refresh()
             
