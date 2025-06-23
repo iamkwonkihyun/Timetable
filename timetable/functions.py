@@ -54,7 +54,7 @@ def today_variable(test: bool = is_test, api: bool = False) -> str:
     today = datetime.datetime.today()
     
     if test:
-        return "20250613","03-22", "Monday", "09:30"
+        return "20250623" if api else "2025년 06월 23일","03-22", "Monday", "09:30"
 
     ymd = today.strftime("%Y%m%d") if api else today.strftime("%Y년 %m월 %d일")
     num = today.strftime("%m-%d")
@@ -116,7 +116,6 @@ def get_meal_api_func(key: str = API_KEY) -> bool:
         else:
             logging_func("get_meal_api_func", f"failed: {result_code}")
             return False
-
     except Exception as e:
         logging_func("get_meal_api_func", f"exception: {str(e)}")
         return False
@@ -131,6 +130,15 @@ def get_timetable_api_func(key: str = API_KEY) -> bool:
     """
     
     ymd, _, _, _ = today_variable(api=True)
+    
+    if get_meal_api_func() == False:
+        meal_info = {
+                ymd: {
+                    "중식": "info-200"
+                }
+            }
+        with open(data_dir_func("api_meal.json"), "w", encoding="utf-8") as f:
+            json.dump(meal_info, f, ensure_ascii=False, indent=4)
     
     period_to_time = {
         "1": "08:40",
@@ -228,7 +236,6 @@ def program_running_check(test: bool = is_test) -> None:
     )
     
     if test:
-        get_meal_api_func()
         get_timetable_api_func()
         
         shutil.rmtree(log_folder_path, ignore_errors=True)
@@ -251,7 +258,7 @@ def program_running_check(test: bool = is_test) -> None:
                 comment="Timetable이 실행중입니다!\n만나서 반가워요!"
             )
             logging_func(title="programRunningCheck", comment="GOOD")
-            return True if get_timetable_api_func() and get_meal_api_func() else False
+            return True if get_timetable_api_func() else False
         else:
             check_time += 1
             if check_time == len(program_name):
