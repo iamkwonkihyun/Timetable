@@ -31,6 +31,9 @@ class system_tray:
         # 세팅 트레이
         make_tray_menu(self, "timetable_icon.ico", "시간표", show_timetable_window, "settings")
         
+        # 새로고침
+        make_tray_menu(self, "refresh_icon.ico", "새로고침", lambda: refresh(self), "refresh")
+        
         # 프로그램 종료 트레이
         make_tray_menu(self, "exit_icon.ico", "프로그램 종료", exit_program_func, "exit")
 
@@ -47,6 +50,10 @@ class system_tray:
     def run(self):
         if self.app.exec_() == 0:
             exit_program_func()
+
+
+def refresh(self):
+    update_tooltip(self)
 
 
 # 트레이 메뉴 생성 함수
