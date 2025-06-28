@@ -9,7 +9,8 @@ from PyQt5.QtWidgets import QAction, QApplication, QMenu, QSystemTrayIcon
 # 로컬 모듈
 from timetable.functions import (alert_func, assets_dir_func,
                                 convert_timetable, exit_program_func,
-                                get_json_data, logging_func, today_variable)
+                                get_json_data, logging_func, today_variable,
+                                get_api_func)
 
 locale.setlocale(locale.LC_TIME, "Korean_Korea")
 
@@ -72,6 +73,7 @@ def make_tray_menu(self, icon: str, title: str, function: any, action: any):
 # tooltip 업데이트 함수
 def update_tooltip(self):
     """트레이 아이콘의 툴팁 업데이트"""
+    get_api_func()
     
     basic_ymd, _, txt, _ = today_variable()
     
