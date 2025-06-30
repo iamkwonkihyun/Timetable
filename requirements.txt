@@ -8,6 +8,9 @@ PyQt5_sip==12.17.0
 python-dotenv==1.1.0
 pywin32==307
 requests==2.32.3
-setuptools==78.1.1
+setuptools==80.9.0
 urllib3==2.3.0
 win10toast==0.9
+PyQt5==5.15.11
+PyQt5-Qt5==5.15.2
+PyQt5_sip==12.17.0

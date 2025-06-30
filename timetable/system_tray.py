@@ -7,9 +7,9 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QApplication, QMenu, QSystemTrayIcon
 
 # 로컬 모듈
-from timetable.functions import (alert_func, assets_dir_func,
-                                convert_timetable, exit_program_func,
-                                get_json_data, logging_func, today_variable,
+from timetable.functions import(assets_dir_func, convert_timetable,
+                                exit_program_func, get_json_data,
+                                logging_func, today_variable, 
                                 get_api_func)
 
 locale.setlocale(locale.LC_TIME, "Korean_Korea")
@@ -27,12 +27,13 @@ class system_tray:
         # # 프로필 트레이 ( 생일, 이름 수정할 수 있게 코드 추가 예정 )
         # make_tray_menu(self, "profile_icon.ico", "profile", show_profile, "profile")
         
-        make_tray_menu(self, "meal_icon.ico", "급식표", set_meal_func, "meal")
-        
-        # 세팅 트레이
+        # 시간표 트레이 메뉴
         make_tray_menu(self, "timetable_icon.ico", "시간표", show_timetable_window, "settings")
         
-        # 새로고침
+        # 급식표 트레이 메뉴
+        make_tray_menu(self, "meal_icon.ico", "급식표", set_meal_func, "meal")
+        
+        # 새로고침 트레이 메뉴
         make_tray_menu(self, "refresh_icon.ico", "새로고침", lambda: refresh(self), "refresh")
         
         # 프로그램 종료 트레이
@@ -53,7 +54,9 @@ class system_tray:
             exit_program_func()
 
 
+# 새로고침 함수
 def refresh(self):
+    logging_func("refresh", "success")
     update_tooltip(self)
 
 
@@ -88,20 +91,31 @@ def update_tooltip(self):
     self.menuIcon.setToolTip(timetable_message)
 
 
-# 오늘 급식 보여주는 함수
+# 급식 보여주는 함수
 def set_meal_func():
+    """급식 정보 팝업창으로 보여주는 함수"""
     api_ymd, _, _, _ = today_variable(api=True)
     meal_list = get_json_data(json_file_name="api_meal.json")
-    meal_list = meal_list[api_ymd]["중식"].split(",")
-    meal_message = "\n".join([f"{food}" for food in meal_list])
-    alert_func(title="급식표", comment=meal_message, only_toast=True)
+
+    # 중식 정보 가져오기
+    meal_data = meal_list.get("중식", "")
+    meal_items = meal_data.split(",") if meal_data else ["급식 정보 없음"]
+
+    # Tkinter 창 생성
+    root = tk.Tk()
+    root.title("오늘의 급식")
+    root.geometry("500x400")
+    
+    # 스크롤 가능한 텍스트 영역 또는 Label 사용
+    label = tk.Label(root, text="\n".join(meal_items), justify="left", anchor="nw")
+    label.pack(fill="both", expand=True, padx=10, pady=10)
+
+    root.mainloop()
 
 
 # 전체 시간표 보여주는 함수
 def show_timetable_window():
     """settings tray 함수"""
-    entries = {}
-
     all_timetable, _ = get_json_data(json_file_name="hard_timetable.json", need_path=True)
     basic_timetable = all_timetable["BASIC_TIMETABLE"]
 
@@ -124,8 +138,9 @@ def show_timetable_window():
             text = basic_timetable.get(day, {}).get(time, "")
             entry = tk.Entry(root, width=20)
             entry.insert(0, text)
+            entry.config(state="readonly")
             entry.grid(row=j+1, column=i+1)
-            entries.setdefault(day, {})[time] = entry
+
 
     root.mainloop()
 

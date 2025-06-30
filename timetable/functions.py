@@ -20,10 +20,12 @@ load_dotenv()
 # 한글화
 locale.setlocale(locale.LC_TIME, "Korean_Korea.utf8")
 
-# api 키
+# env값 불러오기
 API_KEY = os.getenv("NEIS_API_KEY")
+ATPT_OFCDC_SC_CODE = os.getenv("ATPT_OFCDC_SC_CODE")
+SD_SCHUL_CODE = os.getenv("SD_SCHUL_CODE")
 
-# base url
+# api url
 TIMETABLE_URL = "https://open.neis.go.kr/hub/hisTimetable"
 MEAL_URL = "https://open.neis.go.kr/hub/mealServiceDietInfo"
 
@@ -64,61 +66,9 @@ def today_variable(test: bool = is_test, api: bool = False) -> str:
     return ymd, num, txt, next_time
 
 
-# 급식표 api 받아오는 함수
-def get_meal_api_func(key: str = API_KEY) -> bool:
-    ymd, _, _, _ = today_variable(api=True)
+# # 급식표 api 받아오는 함수
+# def get_meal_api_func(key: str = API_KEY) -> bool:
     
-    params = {
-        "KEY": key,
-        "Type": "json",
-        "pIndex": 1,
-        "pSize": 100,
-        "ATPT_OFCDC_SC_CODE": "B10",     # 서울시교육청
-        "SD_SCHUL_CODE": "7010911",       # 한세사이버보안고등학교
-        "MLSV_YMD" : ymd
-    }
-
-    try:
-        response = requests.get(MEAL_URL, params=params)
-        if response.status_code != 200:
-            logging_func("get_meal_api_func", "HTTP failed")
-            return False
-
-        data = response.json()
-
-        # 응답 결과 코드 확인
-        try:
-            result_code = data["mealServiceDietInfo"][0]["head"][1]["RESULT"]["CODE"]
-        except (KeyError, IndexError):
-            logging_func("get_meal_api_func", "wrong_value")
-            return False
-
-        if result_code == "INFO-000":
-            rows = data["mealServiceDietInfo"][1]["row"]
-            meal_info = {}
-
-            for row in rows:
-                date = row.get("MLSV_YMD")
-                meal_type = row.get("MMEAL_SC_NM")  # 조식, 중식, 석식 중 선택
-                menu = row.get("DDISH_NM", "").replace("<br/>", ",")
-                
-                if date not in meal_info:
-                    meal_info[date] = {}
-
-                meal_info[date][meal_type] = menu
-
-            # JSON 파일로 저장
-            with open(data_dir_func("api_meal.json"), "w", encoding="utf-8") as f:
-                json.dump(meal_info, f, ensure_ascii=False, indent=4)
-
-            logging_func("get_meal_api_func", "success")
-            return True
-        else:
-            logging_func("get_meal_api_func", f"failed: {result_code}")
-            return False
-    except Exception as e:
-        logging_func("get_meal_api_func", f"exception: {str(e)}")
-        return False
 
 
 # 시간표 api 받아오는 함수
@@ -131,14 +81,30 @@ def get_api_func(key: str = API_KEY) -> bool:
     
     ymd, _, _, _ = today_variable(api=True)
     
-    if get_meal_api_func() == False:
-        meal_info = {
-                ymd: {
-                    "중식": "급식표 api 오류로 인한 에러"
-                }
-            }
-        with open(data_dir_func("api_meal.json"), "w", encoding="utf-8") as f:
-            json.dump(meal_info, f, ensure_ascii=False, indent=4)
+    meal_api_params = {
+        "KEY": key,
+        "Type": "json",
+        "pIndex": 1,
+        "pSize": 100,
+        "ATPT_OFCDC_SC_CODE": ATPT_OFCDC_SC_CODE,
+        "SD_SCHUL_CODE": SD_SCHUL_CODE,
+        "MLSV_YMD" : ymd
+    }
+    
+    timetable_api_params = {
+        "KEY": key,
+        "Type": "json",
+        "pIndex": 1,
+        "pSize": 100,
+        "ATPT_OFCDC_SC_CODE": ATPT_OFCDC_SC_CODE,
+        "SD_SCHUL_CODE": SD_SCHUL_CODE,
+        "DDDEP_NM": "클라우드보안과",
+        "GRADE": 3,
+        "CLASS_NM": 2,
+        "sem": 1,
+        "AY": 2025,
+        "ALL_TI_YMD": ymd
+    }
     
     period_to_time = {
         "1": "08:40",
@@ -150,54 +116,67 @@ def get_api_func(key: str = API_KEY) -> bool:
         "7": "15:20"
     }
     
-    # 파라미터를 딕셔너리로 정리
-    params = {
-        "KEY": key,
-        "Type": "json",
-        "pIndex": 1,
-        "pSize": 100,
-        "ATPT_OFCDC_SC_CODE": "B10",         # 교육청 코드
-        "SD_SCHUL_CODE": "7010911",          # 학교 코드
-        "DDDEP_NM": "클라우드보안과",         # 학과명
-        "GRADE": 3,
-        "CLASS_NM": 2,
-        "sem": 1,                           # 학기
-        "AY": 2025,                         # 학년도
-        "ALL_TI_YMD": ymd
-    }
-    
-    response = requests.get(TIMETABLE_URL, params=params)
-    
-    if response.status_code == 200:
-        data = response.json()
+    try:
+        meal_api_response = requests.get(MEAL_URL, params=meal_api_params)
+        timetable_api_response = requests.get(TIMETABLE_URL, params=timetable_api_params)
+        
+        if meal_api_response.status_code != 200 or timetable_api_response.status_code != 200:
+            logging_func("get_api_func", "HTTP failed")
+            return False
 
-        # 응답의 RESULT 코드 확인
+        meal_api_data = meal_api_response.json()
+        timetable_api_data = timetable_api_response.json()
+        
+        meal_list = {}
+
+        # 급식
         try:
-            result_code = data["hisTimetable"][0]["head"][1]["RESULT"]["CODE"]
+            meal_api_result_code = meal_api_data["mealServiceDietInfo"][0]["head"][1]["RESULT"]["CODE"]
+        except (KeyError, IndexError):
+            logging_func("get_meal_api_func", "wrong_value")
+            return False
+        
+        if meal_api_result_code == "INFO-000":
+            rows = meal_api_data["mealServiceDietInfo"][1]["row"]
+
+            for row in rows:
+                menu = row.get("DDISH_NM", "").replace("<br/>", ",")
+                meal_list["중식"] = menu
+
+            # JSON 파일로 저장
+            with open(data_dir_func("api_meal.json"), "w", encoding="utf-8") as f:
+                json.dump(meal_list, f, ensure_ascii=False, indent=4)
+
+            logging_func("get_meal_api_func", "success")
+            return True
+        
+        # 시간표
+        try:
+            timetable_api_result_code = timetable_api_data["hisTimetable"][0]["head"][1]["RESULT"]["CODE"]
         except (KeyError, IndexError):
             logging_func(title="get_api_func", comment="wrong_value")
             return False
-
-        if result_code == "INFO-000":
+        
+        if timetable_api_result_code == "INFO-000":
             timetable = {
             period_to_time[row["PERIO"]]: row["ITRT_CNTNT"]
-            for row in data["hisTimetable"][1]["row"]
+            for row in timetable_api_data["hisTimetable"][1]["row"]
             if row["PERIO"] in period_to_time
             }
             with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
                 json.dump(timetable, f, ensure_ascii=False, indent=4)
             logging_func(title="get_api_func", comment="success")
             return True
-        elif result_code == "INFO-200":
+        elif timetable_api_result_code == "INFO-200":
             logging_func(title="get_api_func", comment="failed")
             return False
         else:
             logging_func(title="get_api_func", comment="failed")
             return False
-    else:
-        logging_func(title="get_api_func", comment="failed")
+        
+    except Exception as e:
+        logging_func("get_api_func", f"exception: {str(e)}")
         return False
-
 
 # 프로그램 실행 검사 함수
 def program_running_check(test: bool = is_test) -> None:

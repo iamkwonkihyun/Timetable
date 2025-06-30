@@ -1,0 +1,129 @@
+{
+    "hisTimetable": [
+        {
+            "head": [
+                {
+                    "list_total_count": 6
+                },
+                {
+                    "RESULT": {
+                        "CODE": "INFO-000",
+                        "MESSAGE": "정상 처리되었습니다."
+                    }
+                }
+            ]
+        },
+        {
+            "row": [
+                {
+                    "ATPT_OFCDC_SC_CODE": "B10",
+                    "ATPT_OFCDC_SC_NM": "서울특별시교육청",
+                    "SD_SCHUL_CODE": "7010911",
+                    "SCHUL_NM": "한세사이버보안고등학교",
+                    "AY": "2025",
+                    "SEM": "1",
+                    "ALL_TI_YMD": "20250630",
+                    "DGHT_CRSE_SC_NM": "주간",
+                    "ORD_SC_NM": "공업계",
+                    "DDDEP_NM": "클라우드보안과",
+                    "GRADE": "3",
+                    "CLRM_NM": "2",
+                    "CLASS_NM": "2",
+                    "PERIO": "1",
+                    "ITRT_CNTNT": "일본어Ⅰ",
+                    "LOAD_DTM": "20250630"
+                },
+                {
+                    "ATPT_OFCDC_SC_CODE": "B10",
+                    "ATPT_OFCDC_SC_NM": "서울특별시교육청",
+                    "SD_SCHUL_CODE": "7010911",
+                    "SCHUL_NM": "한세사이버보안고등학교",
+                    "AY": "2025",
+                    "SEM": "1",
+                    "ALL_TI_YMD": "20250630",
+                    "DGHT_CRSE_SC_NM": "주간",
+                    "ORD_SC_NM": "공업계",
+                    "DDDEP_NM": "클라우드보안과",
+                    "GRADE": "3",
+                    "CLRM_NM": "2",
+                    "CLASS_NM": "2",
+                    "PERIO": "2",
+                    "ITRT_CNTNT": "* L2⦁L3 스위치 구축",
+                    "LOAD_DTM": "20250630"
+                },
+                {
+                    "ATPT_OFCDC_SC_CODE": "B10",
+                    "ATPT_OFCDC_SC_NM": "서울특별시교육청",
+                    "SD_SCHUL_CODE": "7010911",
+                    "SCHUL_NM": "한세사이버보안고등학교",
+                    "AY": "2025",
+                    "SEM": "1",
+                    "ALL_TI_YMD": "20250630",
+                    "DGHT_CRSE_SC_NM": "주간",
+                    "ORD_SC_NM": "공업계",
+                    "DDDEP_NM": "클라우드보안과",
+                    "GRADE": "3",
+                    "CLRM_NM": "2",
+                    "CLASS_NM": "2",
+                    "PERIO": "3",
+                    "ITRT_CNTNT": "* L2⦁L3 스위치 구축",
+                    "LOAD_DTM": "20250630"
+                },
+                {
+                    "ATPT_OFCDC_SC_CODE": "B10",
+                    "ATPT_OFCDC_SC_NM": "서울특별시교육청",
+                    "SD_SCHUL_CODE": "7010911",
+                    "SCHUL_NM": "한세사이버보안고등학교",
+                    "AY": "2025",
+                    "SEM": "1",
+                    "ALL_TI_YMD": "20250630",
+                    "DGHT_CRSE_SC_NM": "주간",
+                    "ORD_SC_NM": "공업계",
+                    "DDDEP_NM": "클라우드보안과",
+                    "GRADE": "3",
+                    "CLRM_NM": "2",
+                    "CLASS_NM": "2",
+                    "PERIO": "4",
+                    "ITRT_CNTNT": "* L2⦁L3 스위치 구축",
+                    "LOAD_DTM": "20250630"
+                },
+                {
+                    "ATPT_OFCDC_SC_CODE": "B10",
+                    "ATPT_OFCDC_SC_NM": "서울특별시교육청",
+                    "SD_SCHUL_CODE": "7010911",
+                    "SCHUL_NM": "한세사이버보안고등학교",
+                    "AY": "2025",
+                    "SEM": "1",
+                    "ALL_TI_YMD": "20250630",
+                    "DGHT_CRSE_SC_NM": "주간",
+                    "ORD_SC_NM": "공업계",
+                    "DDDEP_NM": "클라우드보안과",
+                    "GRADE": "3",
+                    "CLRM_NM": "2",
+                    "CLASS_NM": "2",
+                    "PERIO": "5",
+                    "ITRT_CNTNT": "* L2⦁L3 스위치 구축",
+                    "LOAD_DTM": "20250630"
+                },
+                {
+                    "ATPT_OFCDC_SC_CODE": "B10",
+                    "ATPT_OFCDC_SC_NM": "서울특별시교육청",
+                    "SD_SCHUL_CODE": "7010911",
+                    "SCHUL_NM": "한세사이버보안고등학교",
+                    "AY": "2025",
+                    "SEM": "1",
+                    "ALL_TI_YMD": "20250630",
+                    "DGHT_CRSE_SC_NM": "주간",
+                    "ORD_SC_NM": "공업계",
+                    "DDDEP_NM": "클라우드보안과",
+                    "GRADE": "3",
+                    "CLRM_NM": "2",
+                    "CLASS_NM": "2",
+                    "PERIO": "6",
+                    "ITRT_CNTNT": "확률과 통계",
+                    "LOAD_DTM": "20250630"
+                }
+            ]
+        }
+    ]
+}
