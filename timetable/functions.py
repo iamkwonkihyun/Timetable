@@ -66,11 +66,6 @@ def today_variable(test: bool = is_test, api: bool = False) -> str:
     return ymd, num, txt, next_time
 
 
-# # 급식표 api 받아오는 함수
-# def get_meal_api_func(key: str = API_KEY) -> bool:
-    
-
-
 # 시간표 api 받아오는 함수
 def get_api_func(key: str = API_KEY) -> bool:
     """시간표 api 받아오는 함수
@@ -120,8 +115,12 @@ def get_api_func(key: str = API_KEY) -> bool:
         meal_api_response = requests.get(MEAL_URL, params=meal_api_params)
         timetable_api_response = requests.get(TIMETABLE_URL, params=timetable_api_params)
         
-        if meal_api_response.status_code != 200 or timetable_api_response.status_code != 200:
-            logging_func("get_api_func", "HTTP failed")
+        if meal_api_response.status_code != 200:
+            logging_func("get_api_func", "meal HTTP failed")
+            return False
+        
+        if timetable_api_response.status_code != 200:
+            logging_func("get_api_func", "timetable HTTP failed")
             return False
 
         meal_api_data = meal_api_response.json()
@@ -167,9 +166,6 @@ def get_api_func(key: str = API_KEY) -> bool:
                 json.dump(timetable, f, ensure_ascii=False, indent=4)
             logging_func(title="get_api_func", comment="success")
             return True
-        elif timetable_api_result_code == "INFO-200":
-            logging_func(title="get_api_func", comment="failed")
-            return False
         else:
             logging_func(title="get_api_func", comment="failed")
             return False

@@ -94,7 +94,8 @@ def update_tooltip(self):
 # 급식 보여주는 함수
 def set_meal_func():
     """급식 정보 팝업창으로 보여주는 함수"""
-    api_ymd, _, _, _ = today_variable(api=True)
+    ymd, _, _, _ = today_variable()
+    get_api_func()
     meal_list = get_json_data(json_file_name="api_meal.json")
 
     # 중식 정보 가져오기
@@ -103,7 +104,7 @@ def set_meal_func():
 
     # Tkinter 창 생성
     root = tk.Tk()
-    root.title("오늘의 급식")
+    root.title(f"{ymd} 급식")
     root.geometry("500x400")
     
     # 스크롤 가능한 텍스트 영역 또는 Label 사용
