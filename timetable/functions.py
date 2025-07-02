@@ -1,4 +1,5 @@
 import datetime
+import requests
 import json
 import locale
 import logging
@@ -8,6 +9,7 @@ import sys
 import time
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
+from requests.exceptions import RequestException
 
 import requests
 import win32com.client
@@ -41,6 +43,17 @@ base_dir = timetable_dir.parent
 assets_dir = base_dir / "assets"
 data_dir = base_dir / "data"
 
+# 재시도 함수
+def get_with_retry(url, params, retries=3, delay=2):
+    """네트워크 오류 발생 시 재시도 요청 함수"""
+    for i in range(retries):
+        try:
+            return requests.get(url, params=params, timeout=5)
+        except RequestException as e:
+            logging_func("get_with_retry", f"retry {i+1}/{retries} failed: {e}")
+            time.sleep(delay)
+    raise Exception(f"Failed to connect to {url} after {retries} retries.")
+
 
 # 오늘 날짜, 요일, 시간을 반환하는 함수
 def today_variable(test: bool = is_test, api: bool = False) -> str:
@@ -68,11 +81,7 @@ def today_variable(test: bool = is_test, api: bool = False) -> str:
 
 # 시간표 api 받아오는 함수
 def get_api_func(key: str = API_KEY) -> bool:
-    """시간표 api 받아오는 함수
-
-    Args:
-        key (str, optional): api 키값. Defaults to API_KEY.
-    """
+    """시간표, 급식 API 받아오는 함수"""
     
     ymd, _, _, _ = today_variable(api=True)
     
@@ -83,7 +92,7 @@ def get_api_func(key: str = API_KEY) -> bool:
         "pSize": 100,
         "ATPT_OFCDC_SC_CODE": ATPT_OFCDC_SC_CODE,
         "SD_SCHUL_CODE": SD_SCHUL_CODE,
-        "MLSV_YMD" : ymd
+        "MLSV_YMD": ymd
     }
     
     timetable_api_params = {
@@ -112,9 +121,9 @@ def get_api_func(key: str = API_KEY) -> bool:
     }
     
     try:
-        meal_api_response = requests.get(MEAL_URL, params=meal_api_params)
-        timetable_api_response = requests.get(TIMETABLE_URL, params=timetable_api_params)
-        
+        meal_api_response = get_with_retry(MEAL_URL, meal_api_params)
+        timetable_api_response = get_with_retry(TIMETABLE_URL, timetable_api_params)
+
         if meal_api_response.status_code != 200:
             logging_func("get_api_func", "meal HTTP failed")
             return False
@@ -128,7 +137,7 @@ def get_api_func(key: str = API_KEY) -> bool:
         
         meal_list = {}
 
-        # 급식
+        # 급식 처리
         try:
             meal_api_result_code = meal_api_data["mealServiceDietInfo"][0]["head"][1]["RESULT"]["CODE"]
         except (KeyError, IndexError):
@@ -137,41 +146,46 @@ def get_api_func(key: str = API_KEY) -> bool:
         
         if meal_api_result_code == "INFO-000":
             rows = meal_api_data["mealServiceDietInfo"][1]["row"]
-
             for row in rows:
                 menu = row.get("DDISH_NM", "").replace("<br/>", ",")
                 meal_list["중식"] = menu
 
-            # JSON 파일로 저장
             with open(data_dir_func("api_meal.json"), "w", encoding="utf-8") as f:
                 json.dump(meal_list, f, ensure_ascii=False, indent=4)
 
             logging_func("get_meal_api_func", "success")
-            return True
-        
-        # 시간표
+        else:
+            logging_func("get_meal_api_func", f"API returned result code: {meal_api_result_code}")
+            return False
+
+        # 시간표 처리
         try:
             timetable_api_result_code = timetable_api_data["hisTimetable"][0]["head"][1]["RESULT"]["CODE"]
         except (KeyError, IndexError):
-            logging_func(title="get_api_func", comment="wrong_value")
+            logging_func("get_api_func", "wrong_value")
             return False
         
         if timetable_api_result_code == "INFO-000":
             timetable = {
-            period_to_time[row["PERIO"]]: row["ITRT_CNTNT"]
-            for row in timetable_api_data["hisTimetable"][1]["row"]
-            if row["PERIO"] in period_to_time
+                period_to_time[row["PERIO"]]: row["ITRT_CNTNT"]
+                for row in timetable_api_data["hisTimetable"][1]["row"]
+                if row["PERIO"] in period_to_time
             }
             with open(data_dir_func("api_timetable.json"), "w", encoding="utf-8") as f:
                 json.dump(timetable, f, ensure_ascii=False, indent=4)
-            logging_func(title="get_api_func", comment="success")
+
+            logging_func("get_api_func", "success")
             return True
         else:
-            logging_func(title="get_api_func", comment="failed")
+            logging_func("get_api_func", f"timetable failed with result code: {timetable_api_result_code}")
             return False
-        
+
     except Exception as e:
-        logging_func("get_api_func", f"exception: {str(e)}")
+        # DNS 관련 에러 메시지를 구분해서 로깅
+        if "getaddrinfo failed" in str(e):
+            logging_func("get_api_func", "DNS 해석 실패: open.neis.go.kr")
+        else:
+            logging_func("get_api_func", f"exception: {str(e)}")
         return False
 
 # 프로그램 실행 검사 함수
