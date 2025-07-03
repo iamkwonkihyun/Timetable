@@ -43,12 +43,6 @@ class system_tray:
         update_tooltip(self)
         self.menuIcon.show()
         
-        
-    def set_refresh(self):
-        update_tooltip(self)
-        logging_func("set_refresh", "success")
-        
-        
     def run(self):
         if self.app.exec_() == 0:
             exit_program_func()
@@ -56,6 +50,7 @@ class system_tray:
 
 # 새로고침 함수
 def refresh(self):
+    get_api_func()
     logging_func("refresh", "success")
     update_tooltip(self)
 
@@ -76,8 +71,6 @@ def make_tray_menu(self, icon: str, title: str, function: any, action: any):
 # tooltip 업데이트 함수
 def update_tooltip(self):
     """트레이 아이콘의 툴팁 업데이트"""
-    get_api_func()
-    
     basic_ymd, _, txt, _ = today_variable()
     
     api_timetable = get_json_data(json_file_name = "api_timetable.json")
@@ -95,7 +88,7 @@ def update_tooltip(self):
 def set_meal_func():
     """급식 정보 팝업창으로 보여주는 함수"""
     ymd, _, _, _ = today_variable()
-    get_api_func()
+    
     meal_list = get_json_data(json_file_name="api_meal.json")
 
     # 중식 정보 가져오기
@@ -117,7 +110,7 @@ def set_meal_func():
 # 전체 시간표 보여주는 함수
 def show_timetable_window():
     """settings tray 함수"""
-    all_timetable, _ = get_json_data(json_file_name="hard_timetable.json", need_path=True)
+    all_timetable = get_json_data(json_file_name="hard_timetable.json")
     basic_timetable = all_timetable["BASIC_TIMETABLE"]
 
     root = tk.Tk()

@@ -43,6 +43,10 @@ base_dir = timetable_dir.parent
 assets_dir = base_dir / "assets"
 data_dir = base_dir / "data"
 
+# etc
+BIRTHDAY = "03-09"
+PROGRAM_NAME_LIST = ["pyw.exe", "pythonw.exe", "py.exe", "python.exe"]
+
 # 재시도 함수
 def get_with_retry(url, params, retries=3, delay=2):
     """네트워크 오류 발생 시 재시도 요청 함수"""
@@ -85,6 +89,8 @@ def get_api_func(key: str = API_KEY) -> bool:
     
     ymd, _, _, _ = today_variable(api=True)
     
+    meal_list = {}
+    
     meal_api_params = {
         "KEY": key,
         "Type": "json",
@@ -122,22 +128,13 @@ def get_api_func(key: str = API_KEY) -> bool:
     
     try:
         meal_api_response = get_with_retry(MEAL_URL, meal_api_params)
-        timetable_api_response = get_with_retry(TIMETABLE_URL, timetable_api_params)
-
+        
         if meal_api_response.status_code != 200:
             logging_func("get_api_func", "meal HTTP failed")
             return False
         
-        if timetable_api_response.status_code != 200:
-            logging_func("get_api_func", "timetable HTTP failed")
-            return False
-
         meal_api_data = meal_api_response.json()
-        timetable_api_data = timetable_api_response.json()
         
-        meal_list = {}
-
-        # 급식 처리
         try:
             meal_api_result_code = meal_api_data["mealServiceDietInfo"][0]["head"][1]["RESULT"]["CODE"]
         except (KeyError, IndexError):
@@ -157,8 +154,23 @@ def get_api_func(key: str = API_KEY) -> bool:
         else:
             logging_func("get_meal_api_func", f"API returned result code: {meal_api_result_code}")
             return False
-
-        # 시간표 처리
+    except Exception as e:
+        # DNS 관련 에러 메시지를 구분해서 로깅
+        if "getaddrinfo failed" in str(e):
+            logging_func("get_api_func", "DNS 해석 실패: open.neis.go.kr")
+        else:
+            logging_func("get_api_func", f"exception: {str(e)}")
+        return False
+    
+    try:
+        timetable_api_response = get_with_retry(TIMETABLE_URL, timetable_api_params)
+        
+        if timetable_api_response.status_code != 200:
+            logging_func("get_api_func", "timetable HTTP failed")
+            return False
+        
+        timetable_api_data = timetable_api_response.json()
+        
         try:
             timetable_api_result_code = timetable_api_data["hisTimetable"][0]["head"][1]["RESULT"]["CODE"]
         except (KeyError, IndexError):
@@ -179,9 +191,7 @@ def get_api_func(key: str = API_KEY) -> bool:
         else:
             logging_func("get_api_func", f"timetable failed with result code: {timetable_api_result_code}")
             return False
-
     except Exception as e:
-        # DNS 관련 에러 메시지를 구분해서 로깅
         if "getaddrinfo failed" in str(e):
             logging_func("get_api_func", "DNS 해석 실패: open.neis.go.kr")
         else:
@@ -189,7 +199,7 @@ def get_api_func(key: str = API_KEY) -> bool:
         return False
 
 # 프로그램 실행 검사 함수
-def program_running_check(test: bool = is_test) -> None:
+def program_running_check(test: bool = is_test) -> bool | None:
     """프로그램 실행 확인 함수
 
     Args:
@@ -201,7 +211,6 @@ def program_running_check(test: bool = is_test) -> None:
     check_time = 0
     log_folder_path = "logs"
     data_folder_path = "data"
-    program_name = get_json_data(json_file_name="etc_data.json", root_key="PROGRAM_DATA", sub_key="PROGRAM_NAME")
     
     if not os.path.exists(log_folder_path):
         os.makedirs(log_folder_path, exist_ok=True)
@@ -235,7 +244,7 @@ def program_running_check(test: bool = is_test) -> None:
     
     logging_func(title="programRunningCheck", comment="···")
     
-    for program in program_name:
+    for program in PROGRAM_NAME_LIST:
         
         wmi = win32com.client.Dispatch("WbemScripting.SWbemLocator")
         service = wmi.ConnectServer(".", "root\\cimv2")
@@ -247,10 +256,10 @@ def program_running_check(test: bool = is_test) -> None:
                 comment="Timetable이 실행중입니다!\n만나서 반가워요!"
             )
             logging_func(title="programRunningCheck", comment="GOOD")
-            return True if get_api_func() else False
+            return True
         else:
             check_time += 1
-            if check_time == len(program_name):
+            if check_time == len(PROGRAM_NAME_LIST):
                 alert_func(
                     title="🤯 음??!!",
                     comment="이런.. 안 좋은 소식이 있어요..\n프로그램에 무슨 문제가 있나봐요..",
@@ -328,9 +337,7 @@ def is_birthday(today: str, notified_times: set[str]) -> None:
         today (str): 오늘 날짜
     """
     
-    all_user_data = get_json_data("etc_data.json")
-    
-    if today == all_user_data["USER_DATA"]["BIRTHDAY"] and today not in notified_times:
+    if today == BIRTHDAY and today not in notified_times:
         alert_func(title="HAPPY BIRTHDAY TO YOU!!!", comment="Today is your birthday!!🎂")
 
 
@@ -362,11 +369,7 @@ def data_dir_func(file_name: str) -> str:
 
 
 # json 데이터 반환 함수
-def get_json_data(json_file_name: str,
-    root_key: str | None = None,
-    sub_key: str | None = None,
-    need_path: bool = False
-    ) -> tuple[str, dict[str, str]] | dict[str, str]:
+def get_json_data(json_file_name: str) -> dict[str, str]:
     
     """
     JSON 파일에서 데이터를 가져옵니다.
@@ -397,15 +400,8 @@ def get_json_data(json_file_name: str,
 
     with open(JSON_DATA_PATH, "r", encoding="utf-8") as f:
         json_data = json.load(f)
-
-    if root_key is None:
-        result = json_data
-    elif sub_key is None:
-        result = json_data.get(root_key, None)
-    else:
-        result = json_data.get(root_key, {}).get(sub_key, None)
-
-    return (result, JSON_DATA_PATH) if need_path else result
+    
+    return json_data
 
 
 # 로깅 함수
@@ -449,7 +445,7 @@ def convert_timetable(timetable: dict[str, str]) -> dict[str, str]:
 
 
 # 실질적 main 함수
-def timetable_func(set_refresh):
+def timetable_func():
     today_timetable = get_json_data(json_file_name="api_timetable.json")
     all_Timetable = get_json_data(json_file_name="hard_timetable.json")
     breaktime = all_Timetable["BREAKTIME"]
@@ -461,7 +457,7 @@ def timetable_func(set_refresh):
         _, num_today, txt_today, next_time = today_variable()
         
         # notifiedTime 변수 초기화 ( 하루가 지날때만 )
-        if is_yesterday(txt_today, yesterday):
+        if is_yesterday(today=txt_today, yesterday=yesterday):
             yesterday = txt_today
             
             # notified_times 변수 초기화
@@ -469,8 +465,6 @@ def timetable_func(set_refresh):
             
             # 시간표 갱신
             get_api_func()
-            
-            set_refresh()
             
             # 생일 확인 함수
             if is_birthday(num_today, notified_times):
