@@ -18,8 +18,6 @@
 > > -   ntfy 들어가서 아래에 + 누르기
 > > -   주제 이름에 "Timetable" 입력 후 구독하기
 > > -   FINISH.
-> >
-> > ~~모든 것들이 잘되었다면 노트북(컴퓨터), 폰에서 "Hello!" 이라는 알림이 뜰것이다.~~
 >
 > ## What features does it have?
 >
