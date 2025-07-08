@@ -98,10 +98,10 @@ def set_meal_func():
     # Tkinter 창 생성
     root = tk.Tk()
     root.title(f"{ymd} 급식")
-    root.geometry("500x400")
+    root.geometry("1200x600")
     
     # 스크롤 가능한 텍스트 영역 또는 Label 사용
-    label = tk.Label(root, text="\n".join(meal_items), justify="left", anchor="nw")
+    label = tk.Label(root, text="\n".join(meal_items), justify="left", anchor="nw", font=("Helvetica", 20))
     label.pack(fill="both", expand=True, padx=10, pady=10)
 
     root.mainloop()
